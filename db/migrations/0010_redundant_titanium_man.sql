@@ -1,0 +1,1 @@
+ALTER TABLE "companies" ADD COLUMN "has_label_splitter" boolean DEFAULT false NOT NULL;

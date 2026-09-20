@@ -1,0 +1,288 @@
+.storefront-shell {
+  --sf-ink: #102b27;
+  --sf-muted: #5a6f6b;
+  --sf-soft: #82938f;
+  --sf-accent: #087f6f;
+  --sf-accent-hover: #05675b;
+  --sf-accent-soft: #e7f6f2;
+  --sf-line: #dce9e5;
+  --sf-surface: rgba(255, 255, 255, 0.88);
+  --sf-bg: #f5f9f7;
+  --sf-radius: 1.25rem;
+
+  min-height: 100vh;
+  color: var(--sf-ink);
+  font-family: var(--font-sf-body), system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(167, 230, 216, 0.35), transparent 28rem),
+    radial-gradient(circle at 96% 8%, rgba(228, 215, 163, 0.22), transparent 24rem),
+    linear-gradient(180deg, #fbfdfc 0%, var(--sf-bg) 42%, #f0f6f3 100%);
+}
+
+.storefront-shell * {
+  box-sizing: border-box;
+}
+
+.storefront-shell a {
+  text-decoration: none;
+}
+
+.sf-display {
+  font-family: var(--font-sf-display), system-ui, sans-serif;
+}
+
+.sf-surface {
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius);
+  background: var(--sf-surface);
+  box-shadow: 0 1px 2px rgba(16, 43, 39, 0.03);
+}
+
+.sf-card-shadow {
+  box-shadow:
+    0 1px 2px rgba(16, 43, 39, 0.03),
+    0 10px 30px rgba(16, 43, 39, 0.04);
+}
+
+.sf-hero-grid {
+  background-image:
+    linear-gradient(rgba(8, 127, 111, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 127, 111, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.sf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(8, 127, 111, 0.14);
+  border-radius: 999px;
+  background: rgba(231, 246, 242, 0.8);
+  padding: 0.35rem 0.7rem;
+  color: var(--sf-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes sf-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sf-animate-in {
+  animation: sf-fade-up 0.55s ease-out both;
+}
+
+.sf-animate-in-delay {
+  animation: sf-fade-up 0.55s ease-out 0.08s both;
+}
+
+.sf-grid-animate > * {
+  animation: sf-fade-up 0.45s ease-out both;
+}
+
+.sf-grid-animate > *:nth-child(1) { animation-delay: 0.02s; }
+.sf-grid-animate > *:nth-child(2) { animation-delay: 0.05s; }
+.sf-grid-animate > *:nth-child(3) { animation-delay: 0.08s; }
+.sf-grid-animate > *:nth-child(4) { animation-delay: 0.11s; }
+.sf-grid-animate > *:nth-child(5) { animation-delay: 0.14s; }
+.sf-grid-animate > *:nth-child(6) { animation-delay: 0.17s; }
+.sf-grid-animate > *:nth-child(7) { animation-delay: 0.2s; }
+.sf-grid-animate > *:nth-child(8) { animation-delay: 0.23s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-animate-in,
+  .sf-animate-in-delay,
+  .sf-grid-animate > * {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   StitchPure — streetwear homepage theme
+   Bold, dark, editorial. Distinct accent (electric lime) + charcoal ink.
+   ========================================================================== */
+
+.storefront-shell {
+  --sp-ink: #14140f;
+  --sp-paper: #f4f1ea;
+  --sp-charcoal: #1b1b17;
+  --sp-lime: #c6f24e;
+  --sp-lime-ink: #14140f;
+  --sp-line-dark: rgba(255, 255, 255, 0.14);
+}
+
+/* Marquee announcement bar */
+.sp-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--sp-ink);
+  color: var(--sp-paper);
+}
+.sp-marquee__track {
+  display: inline-flex;
+  gap: 3rem;
+  padding: 0.55rem 0;
+  animation: sp-marquee 22s linear infinite;
+  will-change: transform;
+}
+.sp-marquee__track span {
+  font-family: var(--font-sf-display), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+@keyframes sp-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Hero */
+.sp-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  background: var(--sp-charcoal);
+  color: var(--sp-paper);
+  isolation: isolate;
+}
+.sp-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(198, 242, 78, 0.22), transparent 45%),
+    radial-gradient(80% 90% at 0% 100%, rgba(255, 255, 255, 0.08), transparent 50%),
+    linear-gradient(135deg, #232320 0%, #14140f 60%, #0c0c09 100%);
+}
+.sp-hero__noise {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(80% 80% at 50% 40%, #000, transparent);
+}
+.sp-hero__title {
+  font-family: var(--font-sf-display), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+.sp-outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--sp-paper);
+}
+
+/* Pills / buttons */
+.sp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.8rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.sp-btn:hover { transform: translateY(-2px); }
+.sp-btn--lime { background: var(--sp-lime); color: var(--sp-lime-ink); }
+.sp-btn--lime:hover { background: #d3ff5f; }
+.sp-btn--ghost { border: 1.5px solid var(--sp-paper); color: var(--sp-paper); }
+.sp-btn--ghost:hover { background: var(--sp-paper); color: var(--sp-ink); }
+.sp-btn--dark { background: var(--sp-ink); color: var(--sp-paper); }
+.sp-btn--dark:hover { background: #2a2a24; }
+
+.sp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-line-dark);
+  background: rgba(255,255,255,0.06);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sp-paper);
+}
+
+/* Section heading */
+.sp-section-title {
+  font-family: var(--font-sf-display), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--sp-ink);
+}
+
+/* Category tile */
+.sp-cat {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--sp-charcoal);
+  color: var(--sp-paper);
+  min-height: 9.5rem;
+  display: flex;
+  align-items: flex-end;
+  padding: 1.1rem 1.2rem;
+  transition: transform 0.25s ease;
+}
+.sp-cat:hover { transform: translateY(-3px); }
+.sp-cat::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 90% at 85% 15%, rgba(198,242,78,0.18), transparent 55%);
+}
+.sp-cat__name {
+  position: relative;
+  font-family: var(--font-sf-display), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+/* Header nav link */
+.sp-nav-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-ink);
+  transition: color 0.15s ease;
+}
+.sp-nav-link:hover { color: var(--sp-accent); }
+
+/* Promo band */
+.sp-promo {
+  border-radius: 1.5rem;
+  background: var(--sp-lime);
+  color: var(--sp-ink);
+}

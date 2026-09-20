@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#232320"/>
+      <stop offset="0.6" stop-color="#14140f"/>
+      <stop offset="1" stop-color="#0c0c09"/>
+    </linearGradient>
+    <radialGradient id="lime" cx="0.8" cy="0.15" r="0.6">
+      <stop offset="0" stop-color="#c6f24e" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#c6f24e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#g)"/>
+  <rect width="1200" height="900" fill="url(#lime)"/>
+  <g stroke="#ffffff" stroke-opacity="0.06">
+    <path d="M0 150H1200M0 300H1200M0 450H1200M0 600H1200M0 750H1200"/>
+    <path d="M150 0V900M300 0V900M450 0V900M600 0V900M750 0V900M900 0V900M1050 0V900"/>
+  </g>
+  <text x="600" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="150" font-weight="800" fill="#ffffff" fill-opacity="0.06" letter-spacing="8">STITCHPURE</text>
+</svg>
