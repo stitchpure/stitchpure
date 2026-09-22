@@ -20,8 +20,8 @@ export default function InquiryForm({
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(
     productName
-      ? `Hi, I'm interested in wholesale pricing for ${productName}.`
-      : `Hi, I'd like to inquire about wholesale products from ${companyName}.`
+      ? `Hi, I'd like to know more about ${productName}.`
+      : `Hi, I'd like to know more about your products at ${companyName}.`
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,9 +94,9 @@ export default function InquiryForm({
       className="sf-surface sf-card-shadow space-y-5 p-6 sm:p-8"
     >
       <div>
-        <p className="sf-eyebrow">Direct to seller</p>
+        <p className="sf-eyebrow">Get in touch</p>
         <h2 className="sf-display mt-3 text-2xl font-semibold tracking-[-0.025em] text-[var(--sf-ink)]">
-          Request wholesale details
+          {productName ? "Ask about this product" : "Send us a message"}
         </h2>
         <p className="mt-1 text-sm text-[var(--sf-muted)]">
           Share your details and {companyName} will respond directly.

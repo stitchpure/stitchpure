@@ -22,6 +22,7 @@ export interface StorefrontProductDetail extends StorefrontProduct {
 export interface StorefrontCategory {
   id: string;
   name: string;
+  bannerImage: string | null;
 }
 
 export interface StorefrontPagination {

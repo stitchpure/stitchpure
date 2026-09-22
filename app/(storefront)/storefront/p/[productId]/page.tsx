@@ -128,6 +128,7 @@ export default async function StorefrontProductPage({
         companyName={product.companyName}
         companyPhone={product.companyPhone}
         options={options}
+        availableQuantity={product.availableQuantity}
       />
 
       <div id="inquiry" className="scroll-mt-24">

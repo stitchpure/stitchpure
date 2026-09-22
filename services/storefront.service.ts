@@ -7,6 +7,8 @@ import {
   categories,
   productOptions,
   productOptionValues,
+  productItems,
+  stockLedger,
 } from "@/db/schema";
 import {
   eq,
@@ -151,7 +153,20 @@ export async function getStorefrontProductById(productId: string) {
     throw new ServiceError("Product not found", 404);
   }
 
-  return row;
+  // Available quantity = sum of stock ledger movements across all of this
+  // product's items. Stock is not stored directly; it is derived from the
+  // running ledger (purchases add, sales subtract).
+  const [stockRow] = await db
+    .select({
+      available: sql<number>`COALESCE(SUM(${stockLedger.quantityChange}), 0)::int`,
+    })
+    .from(stockLedger)
+    .innerJoin(productItems, eq(stockLedger.productItemId, productItems.id))
+    .where(eq(productItems.productId, productId));
+
+  const availableQuantity = Math.max(0, Number(stockRow?.available ?? 0));
+
+  return { ...row, availableQuantity };
 }
 
 export interface StorefrontOptionValue {
@@ -371,6 +386,7 @@ export async function getStorefrontCategories() {
     .selectDistinct({
       id: categories.id,
       name: categories.name,
+      bannerImage: categories.bannerImage,
     })
     .from(storefrontListings)
     .innerJoin(products, eq(storefrontListings.productId, products.id))

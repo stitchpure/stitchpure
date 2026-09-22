@@ -27,17 +27,24 @@ function productDetailHref(product: StorefrontProduct): string {
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const images = product.images ?? [];
   const imageSrc = images[0] || PLACEHOLDER;
+  const hoverSrc = images[1];
+  const hasHoverImage = Boolean(hoverSrc);
   const price = Number(product.wholesalePrice);
   const detailHref = productDetailHref(product);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--sf-line)] bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(16,16,15,0.12)]">
-      <Link href={detailHref} className="relative aspect-square w-full overflow-hidden bg-[#ece9e2]">
+    <article className="group flex h-full flex-col">
+      <Link
+        href={detailHref}
+        className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#eceae6]"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageSrc}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+          className={`h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-[1.03] ${
+            hasHoverImage ? "group-hover:opacity-0" : ""
+          }`}
           loading={priority ? "eager" : "lazy"}
           onError={(e) => {
             const img = e.currentTarget;
@@ -46,22 +53,45 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             }
           }}
         />
-        {product.categoryName ? (
-          <span className="absolute top-2.5 left-2.5 rounded-full bg-[var(--sp-ink)]/90 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[var(--sp-paper)] backdrop-blur">
-            {product.categoryName}
-          </span>
+        {hasHoverImage ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={hoverSrc}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 ease-out group-hover:scale-[1.03] group-hover:opacity-100"
+            loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.src.endsWith(PLACEHOLDER)) {
+                img.src = PLACEHOLDER;
+              }
+            }}
+          />
         ) : null}
       </Link>
 
-      <div className="flex items-center justify-between gap-2 p-3">
-        <h2 className="sf-display truncate text-sm font-bold uppercase tracking-[-0.01em] text-[var(--sp-ink)]">
-          <Link href={detailHref} className="hover:text-[var(--sf-accent)]">
-            {product.name}
-          </Link>
-        </h2>
-        <p className="sf-display shrink-0 text-sm font-extrabold tracking-tight text-[var(--sp-ink)]">
-          {formatPrice(Number.isFinite(price) ? price : 0)}
-        </p>
+      <div className="flex items-start justify-between gap-3 pt-2.5">
+        <div className="min-w-0">
+          <h2 className="truncate text-[0.8rem] font-semibold text-[var(--sp-ink)]">
+            <Link href={detailHref} className="hover:text-[var(--sf-accent)]">
+              {product.name}
+            </Link>
+          </h2>
+          <p className="mt-0.5 text-[0.8rem] text-[var(--sf-soft)]">
+            {formatPrice(Number.isFinite(price) ? price : 0)}
+          </p>
+        </div>
+
+        <Link
+          href={detailHref}
+          aria-label={`View ${product.name}`}
+          className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--sp-ink)] text-[var(--sp-ink)] transition-colors hover:bg-[var(--sp-ink)] hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
+          </svg>
+        </Link>
       </div>
     </article>
   );

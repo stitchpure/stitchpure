@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import ProductGrid from "@/components/storefront/ProductGrid";
 import EmptyState from "@/components/storefront/EmptyState";
+import HeroCarousel, {
+  type HeroSlide,
+} from "@/components/storefront/HeroCarousel";
 import { getStorefrontProducts } from "@/services/storefront.service";
 import { SITE_NAME } from "@/lib/site";
 
@@ -20,33 +22,41 @@ export const metadata: Metadata = {
   },
 };
 
-function Hero() {
-  return (
-    <section className="sp-hero sf-animate-in px-5 py-12 sm:px-12 sm:py-20 lg:px-16 lg:py-24">
-      <div className="sp-hero__bg" />
-      <div className="sp-hero__noise" />
-      <div className="relative max-w-2xl">
-        <span className="sp-chip">New season · Live now</span>
-        <h1 className="sp-hero__title mt-5 text-4xl sm:mt-6 sm:text-7xl lg:text-[5.5rem]">
-          Wear it
-          <br />
-          <span className="sp-outline-text">loud.</span>
-        </h1>
-        <p className="mt-5 max-w-md text-sm leading-6 text-[color:rgba(244,241,234,0.72)] sm:mt-6 sm:text-base sm:leading-7">
-          Limited drops, everyday staples and pieces made to stand out. Built by{" "}
-          {SITE_NAME} for people who don&apos;t blend in.
-        </p>
-        <div className="mt-7 sm:mt-8">
-          <Link href="#catalog" className="sp-btn sp-btn--lime">
-            Shop now
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
+// Banner slides for the hero carousel. Drop new images into /public and point
+// `image` at them (e.g. "/banners/drop-2.jpg"). Omit `image` to fall back to
+// the branded gradient background.
+const heroSlides: HeroSlide[] = [
+  {
+    image: "/hero-placeholder.svg",
+    chip: "New season · Live now",
+    titleTop: "Wear it",
+    titleAccent: "loud.",
+    subtitle: `Limited drops, everyday staples and pieces made to stand out. Built by ${SITE_NAME} for people who don't blend in.`,
+    ctaLabel: "Shop now",
+    ctaHref: "#catalog",
+  },
+  {
+    chip: "Fresh drop",
+    titleTop: "New arrivals",
+    titleAccent: "in.",
+    subtitle: "Just-landed styles and restocks. Grab them before they're gone.",
+    ctaLabel: "Explore",
+    ctaHref: "#catalog",
+  },
+];
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const rawSearch = Array.isArray(params.search)
+    ? params.search[0]
+    : params.search;
+  const search = (rawSearch ?? "").trim();
+  const isSearching = search.length >= 3;
+
   let products: Awaited<ReturnType<typeof getStorefrontProducts>>["data"] = [];
   let error: string | null = null;
 
@@ -54,7 +64,7 @@ export default async function HomePage() {
     const result = await getStorefrontProducts({
       page: 1,
       limit: 50,
-      search: undefined,
+      search: isSearching ? search : undefined,
       categoryId: undefined,
       categoryIds: undefined,
       minPrice: undefined,
@@ -67,10 +77,29 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12 sm:space-y-16">
-      <Hero />
+      {isSearching ? null : <HeroCarousel slides={heroSlides} />}
 
       <section id="catalog" className="scroll-mt-24 space-y-6">
-        <h2 className="sp-section-title text-2xl sm:text-3xl">Shop all</h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="sp-section-title text-2xl sm:text-3xl">
+            {isSearching ? (
+              <>
+                Results for{" "}
+                <span className="text-[var(--sf-accent)]">“{search}”</span>
+              </>
+            ) : (
+              "Shop all"
+            )}
+          </h2>
+          {isSearching ? (
+            <a
+              href="/"
+              className="text-sm font-semibold text-[var(--sf-soft)] underline-offset-4 hover:text-[var(--sp-ink)] hover:underline"
+            >
+              Clear search
+            </a>
+          ) : null}
+        </div>
 
         {error ? (
           <div className="rounded-2xl border border-red-200/80 bg-red-50/80 px-4 py-6 text-center text-sm text-red-700">
@@ -78,8 +107,16 @@ export default async function HomePage() {
           </div>
         ) : products.length === 0 ? (
           <EmptyState
-            message="No products are available yet."
-            hint="New drops are on the way — check back soon."
+            message={
+              isSearching
+                ? `No products found for “${search}”.`
+                : "No products are available yet."
+            }
+            hint={
+              isSearching
+                ? "Try a different search term or browse all products."
+                : "New drops are on the way — check back soon."
+            }
           />
         ) : (
           <ProductGrid products={products} />

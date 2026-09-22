@@ -14,6 +14,7 @@ interface ProductDetailClientProps {
   companyName: string;
   companyPhone: string | null;
   options: StorefrontOption[];
+  availableQuantity: number;
 }
 
 function formatPrice(value: number): string {
@@ -98,6 +99,7 @@ export default function ProductDetailClient({
   companyName,
   companyPhone,
   options,
+  availableQuantity,
 }: ProductDetailClientProps) {
   // Track selected value per option id
   const [selected, setSelected] = useState<Record<string, string>>({});
@@ -177,6 +179,19 @@ export default function ProductDetailClient({
             {formatPrice(price)}
           </p>
           <p className="text-xs text-[var(--sf-soft)]">Inclusive of all taxes.</p>
+
+          {/* Stock availability */}
+          {availableQuantity <= 0 ? (
+            <p className="text-sm font-bold uppercase tracking-wide text-red-600">
+              Out of stock
+            </p>
+          ) : availableQuantity <= 5 ? (
+            <p className="text-sm font-bold uppercase tracking-wide text-red-600">
+              Only {availableQuantity} left
+            </p>
+          ) : (
+            <p className="text-sm font-semibold text-emerald-600">In stock</p>
+          )}
         </div>
 
         {/* Variant / size selectors */}
