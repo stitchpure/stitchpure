@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 export interface HeroSlide {
@@ -41,6 +41,33 @@ export default function HeroCarousel({
   const prev = useCallback(() => goTo(index - 1), [goTo, index]);
   const next = useCallback(() => goTo(index + 1), [goTo, index]);
 
+  // Touch swipe (mobile): track the horizontal gesture and change slide on release.
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef(0);
+  const SWIPE_THRESHOLD = 45; // px
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+    setPaused(true);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    const delta = touchDeltaX.current;
+    if (Math.abs(delta) > SWIPE_THRESHOLD) {
+      if (delta < 0) next();
+      else prev();
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+    setPaused(false);
+  }, [next, prev]);
+
   // Auto-advance (paused on hover / focus).
   useEffect(() => {
     if (!hasMultiple || intervalMs <= 0 || paused) return;
@@ -61,6 +88,9 @@ export default function HeroCarousel({
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
+      onTouchStart={hasMultiple ? onTouchStart : undefined}
+      onTouchMove={hasMultiple ? onTouchMove : undefined}
+      onTouchEnd={hasMultiple ? onTouchEnd : undefined}
     >
       {/* Slides — all absolutely positioned so the carousel height stays
           constant regardless of which slide's content is showing. */}
@@ -129,7 +159,7 @@ export default function HeroCarousel({
             type="button"
             onClick={prev}
             aria-label="Previous banner"
-            className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/70 sm:left-5"
+            className="absolute left-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/70 sm:left-5 sm:flex"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -139,7 +169,7 @@ export default function HeroCarousel({
             type="button"
             onClick={next}
             aria-label="Next banner"
-            className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/70 sm:right-5"
+            className="absolute right-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur transition-colors hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/70 sm:right-5 sm:flex"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
