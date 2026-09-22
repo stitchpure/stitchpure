@@ -17,7 +17,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
 
   return (
     <div className="space-y-3">
-      <div className="sf-card-shadow aspect-[3/4] overflow-hidden rounded-[1.75rem] border border-[var(--sf-line)] bg-[#e8eeec]">
+      <div className="sf-card-shadow mx-auto flex aspect-[3/4] max-h-[560px] w-full items-center justify-center overflow-hidden rounded-[1.75rem] border border-[var(--sf-line)] bg-[#e8eeec]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
