@@ -87,6 +87,98 @@ export async function registerCompany(data: RegisterInput) {
   };
 }
 
+/**
+ * One-time bootstrap: create the very first OWNER user for this deployment.
+ *
+ * This exists so a fresh deployment (e.g. a new Neon database on Vercel) can
+ * create its initial admin from the browser instead of running the seed
+ * script. It is deliberately restrictive:
+ *
+ *   - It ONLY works while the `users` table is completely empty. As soon as one
+ *     user exists it throws, so this is not a public signup endpoint.
+ *   - It does not depend on SINGLE_COMPANY_ID. If a company row already exists
+ *     it reuses the first one; otherwise it creates the single company.
+ *
+ * Returns the created company id so the caller can surface it (it should be set
+ * as SINGLE_COMPANY_ID in the environment).
+ */
+export async function bootstrapFirstUser(input: {
+  name: string;
+  email: string;
+  password: string;
+  companyName?: string;
+}) {
+  // 1. Refuse if any user already exists — bootstrap is one-time only.
+  const anyUser = await db.select({ id: users.id }).from(users).limit(1);
+  if (anyUser.length > 0) {
+    throw new Error(
+      "Setup already completed. Registration is disabled — please sign in."
+    );
+  }
+
+  // 2. Reuse an existing company if present, otherwise create one.
+  const existingCompany = await db.select().from(companies).limit(1);
+  let company = existingCompany[0];
+
+  if (!company) {
+    const name = input.companyName?.trim() || "StitchPure";
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 150) || "stitchpure";
+
+    [company] = await db
+      .insert(companies)
+      .values({
+        name,
+        slug,
+        email: input.email,
+      })
+      .returning();
+  }
+
+  // 3. Create the first user as OWNER.
+  const hashedPassword = await hashPassword(input.password);
+
+  const [user] = await db
+    .insert(users)
+    .values({
+      companyId: company.id,
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
+      role: "OWNER",
+    })
+    .returning();
+
+  // 4. Issue tokens so the user is logged in immediately.
+  const accessToken = generateToken({
+    userId: user.id,
+    companyId: company.id,
+    role: user.role,
+  });
+
+  const refreshToken = generateRefreshToken(user.id);
+
+  return {
+    token: accessToken,
+    refreshToken,
+    companyId: company.id,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    company: {
+      id: company.id,
+      name: company.name,
+      slug: company.slug,
+    },
+  };
+}
+
 export async function loginUser(email: string, password: string) {
   // 1. Find User
   const result = await db
