@@ -17,12 +17,12 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
 
   return (
     <div className="space-y-3">
-      <div className="sf-card-shadow aspect-[4/3] overflow-hidden rounded-[1.75rem] border border-[var(--sf-line)] bg-[#e8eeec]">
+      <div className="sf-card-shadow aspect-[3/4] overflow-hidden rounded-[1.75rem] border border-[var(--sf-line)] bg-[#e8eeec]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain"
           onError={(e) => {
             const img = e.currentTarget;
             if (!img.src.endsWith(PLACEHOLDER)) img.src = PLACEHOLDER;
