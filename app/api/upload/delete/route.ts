@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authMiddleware } from "@/middleware/auth";
+import { requireRole } from "@/middleware/role";
+import { Roles } from "@/types/role";
 import crypto from "crypto";
 
 /**
@@ -7,11 +9,12 @@ import crypto from "crypto";
  * Body: { publicId: string }
  *
  * Deletes an image from Cloudinary by its public_id.
- * Protected — requires a valid JWT.
+ * Protected — requires a valid JWT and OWNER/MANAGER role.
  */
 export async function POST(request: NextRequest) {
   try {
-    authMiddleware(request);
+    const user = authMiddleware(request);
+    requireRole(user, Roles.OWNER, Roles.MANAGER);
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;

@@ -2,12 +2,15 @@ import { handleApiError } from "@/lib/api-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { authMiddleware } from "@/middleware/auth";
+import { requireRole } from "@/middleware/role";
+import { Roles } from "@/types/role";
 import { generateInvoiceSchema } from "@/validators/invoice.validator";
 import { generateInvoice } from "@/services/invoice.service";
 
 export async function POST(request: NextRequest) {
   try {
     const user = authMiddleware(request);
+    requireRole(user, Roles.OWNER, Roles.MANAGER);
     const body = await request.json();
     const input = generateInvoiceSchema.parse(body);
     const { pdfBuffer, filename, warnings } = await generateInvoice(user.companyId, input);

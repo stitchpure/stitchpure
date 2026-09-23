@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { authMiddleware } from "@/middleware/auth";
+import { requireRole } from "@/middleware/role";
+import { Roles } from "@/types/role";
 
 import {
   createProductItem,
@@ -19,6 +21,7 @@ type ProductItemStatus = (typeof PRODUCT_ITEM_STATUSES)[number];
 export async function POST(request: NextRequest) {
   try {
     const authUser = authMiddleware(request);
+    requireRole(authUser, Roles.OWNER, Roles.MANAGER);
 
     const body = await request.json();
 
@@ -139,6 +142,15 @@ function handleProductItemError(error: unknown, defaultMessage: string) {
       {
         status: 400,
       }
+    );
+  }
+
+  // Errors carrying an explicit statusCode (e.g. requireRole → 403)
+  const errWithStatus = error as { statusCode?: number; message?: string } | null;
+  if (typeof errWithStatus?.statusCode === "number") {
+    return NextResponse.json(
+      { success: false, message: errWithStatus.message ?? defaultMessage },
+      { status: errWithStatus.statusCode }
     );
   }
 

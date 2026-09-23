@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
 import { authMiddleware } from "@/middleware/auth";
+import { requireRole } from "@/middleware/role";
+import { Roles } from "@/types/role";
 import { createCategorySchema } from "@/validators/category.validator";
 import { createCategory, getCategories } from "@/services/category.service";
 import { handleApiError, jsonCreated, jsonOk } from "@/lib/api-route";
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = authMiddleware(request);
+    requireRole(user, Roles.OWNER, Roles.MANAGER);
 
     const body = await request.json();
     const data = createCategorySchema.parse(body);

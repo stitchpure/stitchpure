@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   unique,
+  index,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
@@ -63,5 +64,6 @@ export const productItems = pgTable(
   (table) => ({
     uniqueSku: unique().on(table.sku),
     uniqueBarcode: unique().on(table.barcode),
+    productIdx: index("product_items_product_id_idx").on(table.productId),
   })
 );

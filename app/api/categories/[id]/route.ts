@@ -4,6 +4,8 @@ import { NextRequest } from "next/server";
 import { ZodError } from "zod";
 
 import { authMiddleware } from "@/middleware/auth";
+import { requireRole } from "@/middleware/role";
+import { Roles } from "@/types/role";
 
 import {
   getCategoryById,
@@ -76,6 +78,7 @@ export async function PATCH(
 ) {
   try {
     const user = authMiddleware(request);
+    requireRole(user, Roles.OWNER, Roles.MANAGER);
 
     const body = await request.json();
 
@@ -133,7 +136,7 @@ export async function PATCH(
         message: error.message,
       },
       {
-        status: 400,
+        status: error.statusCode ?? 400,
       }
     );
   }
@@ -153,6 +156,7 @@ export async function DELETE(
 ) {
   try {
     const user = authMiddleware(request);
+    requireRole(user, Roles.OWNER, Roles.MANAGER);
     const { id } = await params;
     const category = await deleteCategory(
       user.companyId,
@@ -181,7 +185,11 @@ export async function DELETE(
       data: category,
     });
   } catch (error: any) {
-    const status = error.message?.startsWith("Cannot delete") ? 409 : 400;
+    const status = error.statusCode
+      ? error.statusCode
+      : error.message?.startsWith("Cannot delete")
+        ? 409
+        : 400;
     return NextResponse.json(
       {
         success: false,
