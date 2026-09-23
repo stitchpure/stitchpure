@@ -8,6 +8,7 @@ import {
   productOptions,
   productOptionValues,
   productItems,
+  itemOptionValues,
   stockLedger,
 } from "@/db/schema";
 import {
@@ -173,6 +174,12 @@ export interface StorefrontOptionValue {
   id: string;
   value: string;
   colorCode: string | null;
+  /**
+   * Available stock for this specific option value (e.g. size "M"), summed
+   * from the stock ledger across all product items carrying this value.
+   * 0 means out of stock — the storefront disables the option.
+   */
+  stock: number;
 }
 
 export interface StorefrontOption {
@@ -226,13 +233,44 @@ export async function getStorefrontProductOptions(
     )
     .orderBy(asc(productOptionValues.displayOrder), asc(productOptionValues.value));
 
+  // Per-value available stock. For each option value (e.g. size "M") sum the
+  // stock ledger across every product item that carries that value. Values
+  // with no linked item, or a non-positive balance, are treated as 0.
+  const valueIds = valueRows.map((v) => v.id);
+
+  const stockByValueId = new Map<string, number>();
+
+  if (valueIds.length > 0) {
+    const stockRows = await db
+      .select({
+        optionValueId: itemOptionValues.optionValueId,
+        available: sql<number>`COALESCE(SUM(${stockLedger.quantityChange}), 0)::int`,
+      })
+      .from(itemOptionValues)
+      .leftJoin(
+        stockLedger,
+        eq(stockLedger.productItemId, itemOptionValues.itemId)
+      )
+      .where(inArray(itemOptionValues.optionValueId, valueIds))
+      .groupBy(itemOptionValues.optionValueId);
+
+    for (const r of stockRows) {
+      stockByValueId.set(r.optionValueId, Math.max(0, Number(r.available ?? 0)));
+    }
+  }
+
   return optionRows.map((option) => ({
     id: option.id,
     name: option.name,
     type: option.type as StorefrontOption["type"],
     values: valueRows
       .filter((v) => v.optionId === option.id)
-      .map((v) => ({ id: v.id, value: v.value, colorCode: v.colorCode })),
+      .map((v) => ({
+        id: v.id,
+        value: v.value,
+        colorCode: v.colorCode,
+        stock: stockByValueId.get(v.id) ?? 0,
+      })),
   }));
 }
 

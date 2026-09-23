@@ -210,20 +210,26 @@ export default function ProductDetailClient({
             <div className="flex flex-wrap gap-2">
               {option.values.map((val) => {
                 const isSel = selected[option.id] === val.id;
+                const outOfStock = val.stock <= 0;
                 if (option.type === "COLOR" && val.colorCode) {
                   return (
                     <button
                       key={val.id}
                       type="button"
+                      disabled={outOfStock}
                       onClick={() =>
                         setSelected((s) => ({ ...s, [option.id]: val.id }))
                       }
-                      title={val.value}
-                      aria-label={val.value}
-                      className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-105 ${
-                        isSel
-                          ? "border-[var(--sp-ink)] ring-2 ring-[var(--sp-ink)]/20"
-                          : "border-[var(--sf-line)]"
+                      title={outOfStock ? `${val.value} — out of stock` : val.value}
+                      aria-label={
+                        outOfStock ? `${val.value} (out of stock)` : val.value
+                      }
+                      className={`relative h-9 w-9 rounded-full border-2 transition-transform ${
+                        outOfStock
+                          ? "cursor-not-allowed border-[var(--sf-line)] opacity-40 after:absolute after:left-1/2 after:top-1/2 after:h-[140%] after:w-[2px] after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:bg-[var(--sf-soft)] after:content-['']"
+                          : isSel
+                            ? "border-[var(--sp-ink)] ring-2 ring-[var(--sp-ink)]/20 hover:scale-105"
+                            : "border-[var(--sf-line)] hover:scale-105"
                       }`}
                       style={{ backgroundColor: val.colorCode }}
                     />
@@ -233,13 +239,20 @@ export default function ProductDetailClient({
                   <button
                     key={val.id}
                     type="button"
+                    disabled={outOfStock}
                     onClick={() =>
                       setSelected((s) => ({ ...s, [option.id]: val.id }))
                     }
+                    title={outOfStock ? `${val.value} — out of stock` : undefined}
+                    aria-label={
+                      outOfStock ? `${val.value} (out of stock)` : val.value
+                    }
                     className={`min-w-[3rem] rounded-xl border px-4 py-2.5 text-sm font-bold uppercase tracking-wide transition-colors ${
-                      isSel
-                        ? "border-[var(--sp-ink)] bg-[var(--sp-ink)] text-[var(--sp-paper)]"
-                        : "border-[var(--sf-line)] bg-white text-[var(--sp-ink)] hover:border-[var(--sp-ink)]"
+                      outOfStock
+                        ? "cursor-not-allowed border-[var(--sf-line)] bg-[#f3f2ee] text-[var(--sf-soft)] line-through opacity-60"
+                        : isSel
+                          ? "border-[var(--sp-ink)] bg-[var(--sp-ink)] text-[var(--sp-paper)]"
+                          : "border-[var(--sf-line)] bg-white text-[var(--sp-ink)] hover:border-[var(--sp-ink)]"
                     }`}
                   >
                     {val.value}
