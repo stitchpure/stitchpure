@@ -222,9 +222,11 @@ export async function createProductOptionValue(
   await verifyProductOwnership(companyId, productId);
   await verifyOptionOwnership(productId, optionId);
 
-  // Guard against duplicate value for the same option
+  // Look for any existing value with this name (active OR soft-deleted). The
+  // (optionId, value) pair is UNIQUE at the DB level, so a soft-deleted row
+  // still occupies the name and must be handled explicitly.
   const [existing] = await db
-    .select({ id: productOptionValues.id })
+    .select({ id: productOptionValues.id, isActive: productOptionValues.isActive })
     .from(productOptionValues)
     .where(
       and(
@@ -235,10 +237,29 @@ export async function createProductOptionValue(
     .limit(1);
 
   if (existing) {
-    throw new ServiceError(
-      "A value with this name already exists for the option",
-      409
-    );
+    // An active value with this name genuinely already exists — reject.
+    if (existing.isActive) {
+      throw new ServiceError(
+        "A value with this name already exists for the option",
+        409
+      );
+    }
+
+    // A soft-deleted value with this name exists — reactivate and update it
+    // instead of inserting (which would violate the unique constraint).
+    const [reactivated] = await db
+      .update(productOptionValues)
+      .set({
+        isActive: true,
+        code: data.code ?? null,
+        colorCode: data.colorCode ?? null,
+        displayOrder: data.displayOrder,
+        updatedAt: new Date(),
+      })
+      .where(eq(productOptionValues.id, existing.id))
+      .returning();
+
+    return reactivated;
   }
 
   const [created] = await db
