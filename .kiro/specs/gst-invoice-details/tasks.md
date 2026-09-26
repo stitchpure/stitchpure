@@ -124,7 +124,7 @@ This plan implements GST-related fields across the application: shared GSTIN val
     - Display Place of Supply when `placeOfSupply` is present
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [~] 7. Final checkpoint - Ensure all tests pass
+- [ ] 7. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

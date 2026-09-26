@@ -69,7 +69,7 @@ export default function ProductsPage() {
   const { showToast } = useToast();
 
   // Auth
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [role] = useState<UserRole | null>(() => getUser()?.role ?? null);
 
   // Data
   const [products, setProducts] = useState<Product[]>([]);
@@ -135,8 +135,6 @@ export default function ProductsPage() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const user = getUser();
-    setRole(user?.role ?? null);
     fetchData(1);
   }, [fetchData]);
 
@@ -161,22 +159,6 @@ export default function ProductsPage() {
   function openCreateModal() {
     setEditingProduct(null);
     setForm(EMPTY_FORM);
-    setModalOpen(true);
-  }
-
-  function openEditModal(product: Product) {
-    setEditingProduct(product);
-    setForm({
-      name: product.name,
-      categoryId: product.categoryId,
-      hsnCode: product.hsnCode ?? '',
-      description: product.description ?? '',
-      images: [
-        product.images?.[0] ?? '',
-        product.images?.[1] ?? '',
-        product.images?.[2] ?? '',
-      ],
-    });
     setModalOpen(true);
   }
 
@@ -398,14 +380,13 @@ export default function ProductsPage() {
                         {/* Manager / Owner only */}
                         {canManage && (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(product)}
+                            <Link
+                              href={`/products/${product.id}`}
                               className="px-3 py-1 text-xs font-medium text-gray-700 border border-gray-200 rounded-md
                                 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1"
                             >
                               Edit
-                            </button>
+                            </Link>
                             <button
                               type="button"
                               onClick={() => openDeleteDialog(product)}

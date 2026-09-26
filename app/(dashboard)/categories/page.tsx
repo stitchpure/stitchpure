@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { getUser } from '@/lib/auth';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/ToastContext';
@@ -42,7 +42,7 @@ const EMPTY_FORM: CategoryFormData = {
 export default function CategoriesPage() {
   const { showToast } = useToast();
 
-  const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'STAFF'>('STAFF');
+  const [role] = useState<'OWNER' | 'MANAGER' | 'STAFF'>(() => getUser()?.role ?? 'STAFF');
   const canManage = role === 'OWNER' || role === 'MANAGER';
 
   const buildUrl = useCallback(
@@ -68,11 +68,6 @@ export default function CategoriesPage() {
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const [formData, setFormData] = useState<CategoryFormData>(EMPTY_FORM);
-
-  useEffect(() => {
-    const user = getUser();
-    if (user) setRole(user.role);
-  }, []);
 
   // ── Modal helpers ──────────────────────────────────────────────────────────
 

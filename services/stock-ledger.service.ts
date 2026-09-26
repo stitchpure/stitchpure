@@ -88,6 +88,62 @@ export async function writeStockEntry(
 }
 
 /**
+ * Manually adjust an item's stock to a target quantity.
+ *
+ * Used by the product editor to correct/set stock directly. Verifies the item
+ * belongs to the company, then writes a single ADJUSTMENT ledger entry equal to
+ * (target − current). A no-op (target === current) writes nothing.
+ */
+export async function adjustStockToQuantity(
+  companyId: string,
+  productItemId: string,
+  targetQuantity: number,
+  notes?: string
+) {
+  return db.transaction(async (tx) => {
+    // Verify the item belongs to this company (via its product).
+    const [item] = await tx
+      .select({ id: productItems.id })
+      .from(productItems)
+      .innerJoin(products, eq(products.id, productItems.productId))
+      .where(
+        and(
+          eq(productItems.id, productItemId),
+          eq(products.companyId, companyId)
+        )
+      )
+      .limit(1);
+
+    if (!item) {
+      throw new ServiceError("Product item not found", 404);
+    }
+
+    const current = await getStockLevel(companyId, productItemId);
+    const delta = targetQuantity - current;
+
+    if (delta === 0) {
+      return { productItemId, previous: current, current, adjusted: 0 };
+    }
+
+    await writeStockEntry(tx, {
+      companyId,
+      productItemId,
+      movementType: "ADJUSTMENT",
+      referenceType: "MANUAL_ADJUSTMENT",
+      quantityChange: delta,
+      notes: notes ?? "Manual stock adjustment",
+    });
+
+    return {
+      productItemId,
+      previous: current,
+      current: targetQuantity,
+      adjusted: delta,
+    };
+  });
+}
+
+/**
  * Return a paginated ledger for a specific product item.
  * Verifies the item belongs to the company before querying.
  */

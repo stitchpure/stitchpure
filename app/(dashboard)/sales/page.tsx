@@ -135,7 +135,7 @@ export default function SalesPage() {
   const { showToast } = useToast();
 
   // Auth
-  const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'STAFF'>('STAFF');
+  const [role] = useState<'OWNER' | 'MANAGER' | 'STAFF'>(() => getUser()?.role ?? 'STAFF');
   const canManage = role === 'OWNER' || role === 'MANAGER';
 
   // Data
@@ -213,8 +213,6 @@ export default function SalesPage() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const user = getUser();
-    if (user) setRole(user.role);
     fetchSales(1);
     fetchProductItems();
     fetchListings();

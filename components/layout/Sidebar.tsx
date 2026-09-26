@@ -31,6 +31,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Categories', href: '/categories' },
+      { label: 'Add Catalog', href: '/catalog/new' },
       { label: 'Products', href: '/products' },
       { label: 'SKUs', href: '/skus' },
       { label: 'Purchases', href: '/purchases' },

@@ -38,7 +38,7 @@ Implement a client-side Meesho product listing image generator using HTML5 Canva
     - Implement relative time formatting (e.g., "2 hours ago")
     - _Requirements: 9.1, 9.2, 9.5, 9.6_
 
-- [~] 2. Checkpoint - Ensure utility modules compile and pass lint
+- [ ] 2. Checkpoint - Ensure utility modules compile and pass lint
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 3. Implement property-based tests for utility modules
@@ -134,7 +134,7 @@ Implement a client-side Meesho product listing image generator using HTML5 Canva
     - Validate at least one product and one template selected before generation
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [~] 5. Checkpoint - Ensure all components compile
+- [ ] 5. Checkpoint - Ensure all components compile
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 6. Assemble main page and integrate navigation
@@ -164,7 +164,7 @@ Implement a client-side Meesho product listing image generator using HTML5 Canva
     - Create `__tests__/unit/generation-history.test.ts` — max 20 records limit, clear history, corrupt data recovery
     - _Requirements: 4.4, 5.4, 9.1, 9.5, 9.6_
 
-- [~] 8. Final checkpoint - Ensure all tests pass and feature is complete
+- [ ] 8. Final checkpoint - Ensure all tests pass and feature is complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

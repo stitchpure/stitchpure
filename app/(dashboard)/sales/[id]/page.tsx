@@ -57,7 +57,7 @@ export default function SaleDetailPage() {
   const { showToast } = useToast();
 
   // Auth
-  const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'STAFF'>('STAFF');
+  const [role] = useState<'OWNER' | 'MANAGER' | 'STAFF'>(() => getUser()?.role ?? 'STAFF');
   const canManage = role === 'OWNER' || role === 'MANAGER';
 
   // Data
@@ -103,8 +103,6 @@ export default function SaleDetailPage() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const user = getUser();
-    if (user) setRole(user.role);
     fetchSale();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

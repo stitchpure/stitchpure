@@ -11,7 +11,7 @@ import type { ProductWithListing } from "@/types/storefront";
 
 export default function StorefrontManagerPage() {
   const { showToast } = useToast();
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [role] = useState<UserRole | null>(() => getUser()?.role ?? null);
   const [products, setProducts] = useState<ProductWithListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +33,6 @@ export default function StorefrontManagerPage() {
   }, []);
 
   useEffect(() => {
-    const user = getUser();
-    setRole(user?.role ?? null);
     fetchData();
   }, [fetchData]);
 

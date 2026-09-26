@@ -57,28 +57,28 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - Export all new tables from `db/schema/index.ts`
     - _Requirements: 6.1–6.6_
 
-  - [~] 2.3 Update `db/relations.ts` to include relations for all new tables
+  - [ ] 2.3 Update `db/relations.ts` to include relations for all new tables
     - Add one-to-many relations: company → suppliers, company → purchases, company → sales, company → stock_ledger
     - Add relations for purchase ↔ purchase_items, sale ↔ sale_items, product_item ↔ stock_ledger
     - _Requirements: 6.1–6.6_
 
 - [ ] 3. Bug fix — categories active filter and product_options slug
-  - [~] 3.1 Update `services/category.service.ts` to filter `isActive = true` by default
+  - [ ] 3.1 Update `services/category.service.ts` to filter `isActive = true` by default
     - Accept optional `includeInactive` boolean; omit the filter only when it is `true`
     - _Requirements: 12.1, 12.2_
 
-  - [~] 3.2 Update `app/api/categories/route.ts` GET handler to pass `includeInactive` param
+  - [ ] 3.2 Update `app/api/categories/route.ts` GET handler to pass `includeInactive` param
     - Read `includeInactive` query param and forward to service
     - Keep `app/api/categories/[id]/route.ts` GET unchanged (returns regardless of `isActive`)
     - _Requirements: 12.1, 12.2, 12.3_
 
 - [ ] 4. Products CRUD
-  - [~] 4.1 Create `validators/product.validator.ts`
+  - [ ] 4.1 Create `validators/product.validator.ts`
     - `createProductSchema`: `name` (string), `description` (optional), `categoryId` (optional UUID), `isActive` (optional boolean)
     - `updateProductSchema`: all fields optional (partial)
     - _Requirements: 1.9_
 
-  - [~] 4.2 Create `services/product.service.ts`
+  - [ ] 4.2 Create `services/product.service.ts`
     - `createProduct(companyId, data)` — derive slug, check duplicate name within company (409), insert, return
     - `getProducts(companyId, params)` — filter `isActive=true`, paginated with offset/limit from `lib/pagination.ts`
     - `getProductById(companyId, id)` — company-scoped, throws 404 if missing
@@ -91,23 +91,23 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - **Property 4: Duplicate name detection within company scope** — assert second create with same name returns 409
     - **Validates: Requirements 1.3, 1.4**
 
-  - [~] 4.4 Create `app/api/products/route.ts` (GET + POST)
+  - [ ] 4.4 Create `app/api/products/route.ts` (GET + POST)
     - POST: `authMiddleware` → `requireRole(MANAGER, OWNER)` → validate → `createProduct` → 201
     - GET: `authMiddleware` → `parsePaginationParams` → `getProducts` → 200 with `pagination` meta
     - _Requirements: 1.1, 1.4, 1.10, 10.3_
 
-  - [~] 4.5 Create `app/api/products/[id]/route.ts` (GET + PATCH + DELETE)
+  - [ ] 4.5 Create `app/api/products/[id]/route.ts` (GET + PATCH + DELETE)
     - GET: any auth → `getProductById` → 200
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updateProduct` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `softDeleteProduct` → 200
     - _Requirements: 1.5–1.8, 1.10, 10.3_
 
 - [ ] 5. Product Options CRUD
-  - [~] 5.1 Create `validators/product-option.validator.ts`
+  - [ ] 5.1 Create `validators/product-option.validator.ts`
     - `createProductOptionSchema`, `updateProductOptionSchema`, `createProductOptionValueSchema`, `updateProductOptionValueSchema`
     - _Requirements: 2.1–2.13_
 
-  - [~] 5.2 Create `services/product-option.service.ts`
+  - [ ] 5.2 Create `services/product-option.service.ts`
     - `createProductOption(companyId, productId, data)` — verify product ownership, derive slug, 409 on duplicate name
     - `getProductOptions(companyId, productId)` — active only, ordered by `displayOrder`
     - `updateProductOption(companyId, productId, optionId, data)`
@@ -118,63 +118,63 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - `softDeleteProductOptionValue(companyId, productId, optionId, valueId)` — `isActive=false`
     - _Requirements: 2.1–2.13_
 
-  - [~] 5.3 Create `app/api/products/[id]/options/route.ts` (GET + POST)
+  - [ ] 5.3 Create `app/api/products/[id]/options/route.ts` (GET + POST)
     - POST: `requireRole(MANAGER, OWNER)` → validate → `createProductOption` → 201
     - GET: any auth → `getProductOptions` → 200
     - _Requirements: 2.1–2.4, 2.13, 10.3_
 
-  - [~] 5.4 Create `app/api/products/[id]/options/[optionId]/route.ts` (PATCH + DELETE)
+  - [ ] 5.4 Create `app/api/products/[id]/options/[optionId]/route.ts` (PATCH + DELETE)
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updateProductOption` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `softDeleteProductOption` → 200
     - _Requirements: 2.5–2.6, 2.13, 10.3_
 
-  - [~] 5.5 Create `app/api/products/[id]/options/[optionId]/values/route.ts` (GET + POST)
+  - [ ] 5.5 Create `app/api/products/[id]/options/[optionId]/values/route.ts` (GET + POST)
     - POST: `requireRole(MANAGER, OWNER)` → validate → `createProductOptionValue` → 201
     - GET: any auth → `getProductOptionValues` → 200
     - _Requirements: 2.7–2.9, 2.13, 10.3_
 
-  - [~] 5.6 Create `app/api/products/[id]/options/[optionId]/values/[valueId]/route.ts` (PATCH + DELETE)
+  - [ ] 5.6 Create `app/api/products/[id]/options/[optionId]/values/[valueId]/route.ts` (PATCH + DELETE)
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updateProductOptionValue` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `softDeleteProductOptionValue` → 200
     - _Requirements: 2.10–2.13, 10.3_
 
 - [ ] 6. Product Items — update and delete (complete the CRUD)
-  - [~] 6.1 Add `updateProductItemSchema` to `validators/product-item.validator.ts`
+  - [ ] 6.1 Add `updateProductItemSchema` to `validators/product-item.validator.ts`
     - All fields optional partial: `sku`, `barcode`, `purchasePrice`, `sellingPrice`, `mrp`, `weight`, `status`
     - _Requirements: 3.1_
 
-  - [~] 6.2 Add `updateProductItem` and `deleteProductItem` to `services/product-item.service.ts`
+  - [ ] 6.2 Add `updateProductItem` and `deleteProductItem` to `services/product-item.service.ts`
     - `updateProductItem(companyId, id, data)` — partial update, check SKU/barcode uniqueness on other items (409)
     - `deleteProductItem(companyId, id)` — set `status = DISCONTINUED`, company-scoped via joined product
     - _Requirements: 3.1–3.5_
 
-  - [~] 6.3 Update `app/api/product-items/[id]/route.ts` with PATCH and DELETE handlers
+  - [ ] 6.3 Update `app/api/product-items/[id]/route.ts` with PATCH and DELETE handlers
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updateProductItem` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `deleteProductItem` → 200
     - _Requirements: 3.1–3.6, 10.3_
 
 - [ ] 7. Company profile management
-  - [~] 7.1 Create `validators/company.validator.ts` with `updateCompanySchema`
+  - [ ] 7.1 Create `validators/company.validator.ts` with `updateCompanySchema`
     - Allow only: `name`, `email`, `phone`, `logo`; reject `slug`, `subscriptionPlan`, `isActive`
     - _Requirements: 4.3, 4.4_
 
-  - [~] 7.2 Create `services/company.service.ts`
+  - [ ] 7.2 Create `services/company.service.ts`
     - `getCompanyById(companyId, id)` — returns 403 if `id !== companyId`
     - `updateCompany(companyId, id, data)` — update allowed fields only; 403 if different company
     - _Requirements: 4.1–4.5_
 
-  - [~] 7.3 Create `app/api/companies/[id]/route.ts` (GET + PATCH)
+  - [ ] 7.3 Create `app/api/companies/[id]/route.ts` (GET + PATCH)
     - GET: any auth → `getCompanyById` → 200
     - PATCH: `requireRole(OWNER)` → validate → `updateCompany` → 200
     - _Requirements: 4.1–4.5, 10.3_
 
 - [ ] 8. User management
-  - [~] 8.1 Create `validators/user.validator.ts`
+  - [ ] 8.1 Create `validators/user.validator.ts`
     - `createUserSchema`: `name`, `email`, `password`, `role`
     - `updateUserSchema`: `name` and/or `role` (partial)
     - _Requirements: 5.9_
 
-  - [~] 8.2 Create `services/user.service.ts`
+  - [ ] 8.2 Create `services/user.service.ts`
     - `getUsers(companyId, params)` — paginated, select all fields except `password`
     - `createUser(companyId, data)` — hash password with bcrypt, 409 on duplicate email within company, return without `password`
     - `getUserById(companyId, id)` — company-scoped, without `password`
@@ -187,22 +187,22 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - **Property 9: Self-modification prevention** — assert `updateUser` and `softDeleteUser` throw when `actorUserId === id`
     - **Validates: Requirements 5.2, 5.6, 5.7**
 
-  - [~] 8.4 Create `app/api/users/route.ts` (GET + POST) — OWNER only
+  - [ ] 8.4 Create `app/api/users/route.ts` (GET + POST) — OWNER only
     - GET: `requireRole(OWNER)` → `getUsers` with pagination → 200 with `pagination`
     - POST: `requireRole(OWNER)` → validate → `createUser` → 201
     - _Requirements: 5.1–5.3, 5.8, 10.3_
 
-  - [~] 8.5 Create `app/api/users/[id]/route.ts` (GET + PATCH + DELETE) — OWNER only
+  - [ ] 8.5 Create `app/api/users/[id]/route.ts` (GET + PATCH + DELETE) — OWNER only
     - GET: `requireRole(OWNER)` → `getUserById` → 200
     - PATCH: `requireRole(OWNER)` → validate → `updateUser` → 200
     - DELETE: `requireRole(OWNER)` → `softDeleteUser` → 200
     - _Requirements: 5.4–5.8, 10.3_
 
-- [~] 9. Checkpoint — ensure all tests pass and existing routes still work
+- [ ] 9. Checkpoint — ensure all tests pass and existing routes still work
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Stock ledger — schema, helper, and read endpoint
-  - [~] 10.1 Create `services/stock-ledger.service.ts`
+  - [ ] 10.1 Create `services/stock-ledger.service.ts`
     - `writeStockEntry(tx, entry)` — internal helper: computes `quantity_after` via `getStockLevel`, inserts row; used inside transactions
     - `getStockLevel(companyId, productItemId): Promise<number>` — `COALESCE(SUM(quantity_change), 0)` from `stock_ledger`
     - `getStockLedger(companyId, productItemId, params)` — verify ownership, paginated entries
@@ -213,27 +213,27 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - Use `fc.array(fc.integer({ min: -100, max: 100 }))` as random `quantity_change` sequences; assert `getStockLevel` equals the arithmetic sum
     - **Validates: Requirements 9.1**
 
-  - [~] 10.3 Create `app/api/stock-ledger/route.ts` (GET only)
+  - [ ] 10.3 Create `app/api/stock-ledger/route.ts` (GET only)
     - Require `productItemId` query param; any auth → `getStockLedger` with pagination → 200
     - Return 404 if item doesn't belong to company (per service)
     - _Requirements: 9.4, 9.5_
 
-  - [~] 10.4 Update `getProductItemById` and `getProductItems` in `services/product-item.service.ts` to include `stockLevel`
+  - [ ] 10.4 Update `getProductItemById` and `getProductItems` in `services/product-item.service.ts` to include `stockLevel`
     - Join `stock_ledger` subquery (`SUM(quantity_change)` grouped by `product_item_id`) per item
     - Add `stockLevel: number` to the return type
     - _Requirements: 9.2, 9.3_
 
-  - [~] 10.5 Update `app/api/product-items/route.ts` GET and `app/api/product-items/[id]/route.ts` GET to add pagination
+  - [ ] 10.5 Update `app/api/product-items/route.ts` GET and `app/api/product-items/[id]/route.ts` GET to add pagination
     - Parse `page`/`limit` from `parsePaginationParams` and return with `pagination` meta in list response
     - _Requirements: 11.1, 11.2_
 
 - [ ] 11. Purchases (stock in)
-  - [~] 11.1 Create `validators/purchase.validator.ts`
+  - [ ] 11.1 Create `validators/purchase.validator.ts`
     - `createPurchaseSchema`: `supplierId` (optional UUID), `referenceNo` (optional), `purchaseDate`, `status` (default PENDING), `notes` (optional), `items` array with `productItemId`, `quantity`, `unitPrice`
     - `updatePurchaseSchema`: `status` only (RECEIVED or CANCELLED)
     - _Requirements: 7.9_
 
-  - [~] 11.2 Create `services/purchase.service.ts`
+  - [ ] 11.2 Create `services/purchase.service.ts`
     - `createPurchase(companyId, data)` — transaction: validate all `product_item_id` ownership, insert purchase + items, call `writeStockEntry` per item if `status=RECEIVED`
     - `getPurchases(companyId, params)` — paginated, ordered by `purchase_date DESC`
     - `getPurchaseById(companyId, id)` — includes line items, 404 if not found
@@ -246,24 +246,24 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - **Property 12: Purchase receive → cancel produces net-zero stock change** — assert `SUM(quantity_change)` for the purchase's items = 0 after cancellation
     - **Validates: Requirements 7.3, 7.7**
 
-  - [~] 11.4 Create `app/api/purchases/route.ts` (GET + POST)
+  - [ ] 11.4 Create `app/api/purchases/route.ts` (GET + POST)
     - POST: `requireRole(MANAGER, OWNER)` → validate → `createPurchase` → 201
     - GET: any auth → `parsePaginationParams` → `getPurchases` → 200 with `pagination`
     - _Requirements: 7.1, 7.5, 7.10, 10.3_
 
-  - [~] 11.5 Create `app/api/purchases/[id]/route.ts` (GET + PATCH + DELETE)
+  - [ ] 11.5 Create `app/api/purchases/[id]/route.ts` (GET + PATCH + DELETE)
     - GET: any auth → `getPurchaseById` → 200
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updatePurchase` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `deletePurchase` → 200 or 409
     - _Requirements: 7.4, 7.6–7.8, 7.10, 10.3_
 
 - [ ] 12. Sales (stock out)
-  - [~] 12.1 Create `validators/sale.validator.ts`
+  - [ ] 12.1 Create `validators/sale.validator.ts`
     - `createSaleSchema`: `referenceNo` (optional), `saleDate`, `customerName` (optional), `customerPhone` (optional), `status` (default PENDING), `notes` (optional), `items` array with `productItemId`, `quantity`, `unitPrice`
     - `updateSaleSchema`: `status` only (COMPLETED or CANCELLED)
     - _Requirements: 8.10_
 
-  - [~] 12.2 Create `services/sale.service.ts`
+  - [ ] 12.2 Create `services/sale.service.ts`
     - `createSale(companyId, data)` — transaction: validate ownership, if `status=COMPLETED` check stock floor (422 if any item would go negative), insert sale + items, call `writeStockEntry` per item with negative `quantity_change`
     - `getSales(companyId, params)` — paginated, ordered by `sale_date DESC`
     - `getSaleById(companyId, id)` — includes line items, 404 if not found
@@ -276,27 +276,27 @@ Implement all missing backend functionality for the multi-tenant stock managemen
     - **Property 14: Sale complete → cancel produces net-zero stock change** — assert `SUM(quantity_change)` for the sale's items = 0 after cancellation
     - **Validates: Requirements 8.4, 8.8**
 
-  - [~] 12.4 Create `app/api/sales/route.ts` (GET + POST)
+  - [ ] 12.4 Create `app/api/sales/route.ts` (GET + POST)
     - POST: `requireRole(MANAGER, OWNER)` → validate → `createSale` → 201
     - GET: any auth → `parsePaginationParams` → `getSales` → 200 with `pagination`
     - _Requirements: 8.1, 8.6, 8.11, 10.3_
 
-  - [~] 12.5 Create `app/api/sales/[id]/route.ts` (GET + PATCH + DELETE)
+  - [ ] 12.5 Create `app/api/sales/[id]/route.ts` (GET + PATCH + DELETE)
     - GET: any auth → `getSaleById` → 200
     - PATCH: `requireRole(MANAGER, OWNER)` → validate → `updateSale` → 200
     - DELETE: `requireRole(MANAGER, OWNER)` → `deleteSale` → 200 or 409
     - _Requirements: 8.5, 8.7–8.9, 8.11, 10.3_
 
 - [ ] 13. Apply pagination to remaining existing list endpoints
-  - [~] 13.1 Update `app/api/categories/route.ts` GET to support pagination
+  - [ ] 13.1 Update `app/api/categories/route.ts` GET to support pagination
     - Use `parsePaginationParams`, apply offset/limit in DB query, return `pagination` meta
     - _Requirements: 11.1, 11.2_
 
-  - [~] 13.2 Update `services/category.service.ts` to accept and apply pagination params
+  - [ ] 13.2 Update `services/category.service.ts` to accept and apply pagination params
     - Accept `PaginationParams`, return `{ data, total }` so route can build pagination meta
     - _Requirements: 11.4_
 
-- [~] 14. Final checkpoint — ensure all tests pass
+- [ ] 14. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

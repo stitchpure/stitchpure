@@ -49,8 +49,11 @@ export default function UsersPage() {
   const { showToast } = useToast();
 
   // Auth
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [authorized, setAuthorized] = useState(false);
+  const [currentUserId] = useState<string | null>(() => {
+    const user = getUser();
+    return user?.role === 'OWNER' ? user.userId : null;
+  });
+  const [authorized] = useState(() => getUser()?.role === 'OWNER');
 
   const buildUrl = useCallback(
     (page: number, limit: number) => `/api/users?page=${page}&limit=${limit}`,
@@ -98,14 +101,10 @@ export default function UsersPage() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const user = getUser();
-    if (!user || user.role !== 'OWNER') {
+    if (!authorized) {
       router.replace('/');
-      return;
     }
-    setCurrentUserId(user.userId);
-    setAuthorized(true);
-  }, [router]);
+  }, [authorized, router]);
 
   // Don't render content until role is confirmed
   if (!authorized) return null;

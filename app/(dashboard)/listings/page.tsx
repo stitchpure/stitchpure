@@ -72,7 +72,7 @@ const CHANNELS = ['Meesho', 'Flipkart', 'Amazon', 'Offline'] as const;
 export default function ListingsPage() {
   const { showToast } = useToast();
 
-  const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'STAFF'>('STAFF');
+  const [role] = useState<'OWNER' | 'MANAGER' | 'STAFF'>(() => getUser()?.role ?? 'STAFF');
   const canManage = role === 'OWNER' || role === 'MANAGER';
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -132,10 +132,9 @@ export default function ListingsPage() {
   }
 
   useEffect(() => {
-    const user = getUser();
-    if (user) setRole(user.role);
     fetchListings(1);
     fetchProductItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Re-fetch when filters change

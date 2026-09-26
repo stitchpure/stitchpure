@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getUser } from '@/lib/auth';
 import { apiClient } from '@/lib/api-client';
 import { getToken } from '@/lib/auth';
 import { useToast } from '@/components/ui/ToastContext';

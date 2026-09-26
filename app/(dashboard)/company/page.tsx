@@ -41,7 +41,7 @@ export default function CompanyPage() {
   const { showToast } = useToast();
 
   // Auth
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companyId] = useState<string | null>(() => getUser()?.companyId ?? null);
 
   // Data
   const [company, setCompany] = useState<Company | null>(null);
@@ -98,7 +98,6 @@ export default function CompanyPage() {
       router.replace('/');
       return;
     }
-    setCompanyId(user.companyId);
     fetchCompany(user.companyId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

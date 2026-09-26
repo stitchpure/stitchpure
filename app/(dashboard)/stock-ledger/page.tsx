@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getUser } from '@/lib/auth';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/ToastContext';
 import Skeleton from '@/components/ui/Skeleton';
@@ -68,9 +67,6 @@ function MovementBadge({ type }: { type: string }) {
 function StockLedgerContent() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
-
-  // Auth
-  const [_role, setRole] = useState<'OWNER' | 'MANAGER' | 'STAFF'>('STAFF');
 
   // SKU selector state (used when no query param)
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
@@ -143,11 +139,6 @@ function StockLedgerContent() {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const user = getUser();
-    if (user) {
-      setRole(user.role);
-    }
-
     const paramId = searchParams.get('productItemId');
 
     if (paramId) {

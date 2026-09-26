@@ -75,7 +75,7 @@ Implement GST-compliant tax invoice PDF generation from sales records. The imple
     - Add to `__tests__/properties/invoice-utils.property.test.ts`
     - **Validates: Requirements 5.1, 5.4**
 
-- [~] 3. Checkpoint - Verify utility libraries
+- [ ] 3. Checkpoint - Verify utility libraries
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 4. Implement Zod validators
@@ -160,7 +160,7 @@ Implement GST-compliant tax invoice PDF generation from sales records. The imple
     - Create file at `__tests__/properties/invoice-bulk.property.test.ts`
     - **Validates: Requirements 8.1, 8.2, 8.4, 8.5, 8.7**
 
-- [~] 6. Checkpoint - Verify services
+- [ ] 6. Checkpoint - Verify services
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 7. Implement API route handlers
@@ -201,10 +201,10 @@ Implement GST-compliant tax invoice PDF generation from sales records. The imple
     - Authenticate and scope to `user.companyId`
     - _Requirements: 9.1, 9.3, 9.4, 9.5, 9.7_
 
-- [~] 8. Checkpoint - Verify API routes
+- [ ] 8. Checkpoint - Verify API routes
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 9. Integration wiring and final validation
+- [ ] 9. Integration wiring and final validation
   - [x] 9.1 Wire all components together and verify end-to-end flow
     - Verify schema exports are complete in `db/schema/index.ts`
     - Verify all service imports resolve correctly
@@ -222,7 +222,7 @@ Implement GST-compliant tax invoice PDF generation from sales records. The imple
     - Create file at `__tests__/unit/invoice-integration.test.ts`
     - _Requirements: 7.1, 7.4, 7.5, 8.1, 8.2, 8.8, 9.7, 11.2, 11.4_
 
-- [~] 10. Final checkpoint - Ensure all tests pass
+- [ ] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
