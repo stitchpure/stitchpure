@@ -86,41 +86,80 @@ export async function createProductOption(
 ) {
   await verifyProductOwnership(companyId, productId);
 
-  // Guard against duplicate option name for the same product
+  // Normalize the name so comparison is case- and whitespace-insensitive.
+  const normalizedName = data.name.trim();
+  const slug = deriveSlug(normalizedName);
+
+  // Look for an existing option with this name (active OR soft-deleted). The
+  // (productId, name) pair is UNIQUE at the DB level, so a soft-deleted option
+  // still occupies the name and must be handled explicitly.
   const [existing] = await db
-    .select({ id: productOptions.id })
+    .select({ id: productOptions.id, isActive: productOptions.isActive })
     .from(productOptions)
     .where(
       and(
         eq(productOptions.productId, productId),
-        eq(productOptions.name, data.name)
+        sql`lower(trim(${productOptions.name})) = ${normalizedName.toLowerCase()}`
       )
     )
     .limit(1);
 
   if (existing) {
-    throw new ServiceError(
-      "A product option with this name already exists for the product",
-      409
-    );
+    // An active option with this name genuinely already exists — reject.
+    if (existing.isActive) {
+      throw new ServiceError(
+        "A product option with this name already exists for the product",
+        409
+      );
+    }
+
+    // A soft-deleted option with this name exists — reactivate it (and apply
+    // the newly submitted settings) instead of inserting, which would violate
+    // the unique constraint. Its previously-created values remain attached.
+    const [reactivated] = await db
+      .update(productOptions)
+      .set({
+        isActive: true,
+        name: normalizedName,
+        slug,
+        type: data.type,
+        isRequired: data.isRequired,
+        isVariant: data.isVariant,
+        displayOrder: data.displayOrder,
+        updatedAt: new Date(),
+      })
+      .where(eq(productOptions.id, existing.id))
+      .returning();
+
+    return reactivated;
   }
 
-  const slug = deriveSlug(data.name);
+  try {
+    const [created] = await db
+      .insert(productOptions)
+      .values({
+        productId,
+        name: normalizedName,
+        slug,
+        type: data.type,
+        isRequired: data.isRequired,
+        isVariant: data.isVariant,
+        displayOrder: data.displayOrder,
+      })
+      .returning();
 
-  const [created] = await db
-    .insert(productOptions)
-    .values({
-      productId,
-      name: data.name,
-      slug,
-      type: data.type,
-      isRequired: data.isRequired,
-      isVariant: data.isVariant,
-      displayOrder: data.displayOrder,
-    })
-    .returning();
-
-  return created;
+    return created;
+  } catch (err: unknown) {
+    // Fall back to a clean 409 if a concurrent insert / exact-case row raced
+    // past the pre-check and hit the (productId, name) unique constraint.
+    if (isUniqueViolation(err)) {
+      throw new ServiceError(
+        "A product option with this name already exists for the product",
+        409
+      );
+    }
+    throw err;
+  }
 }
 
 /**
