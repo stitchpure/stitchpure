@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { products, productOptions, productOptionValues } from "@/db/schema";
@@ -11,6 +11,21 @@ import type { CreateProductOptionValueInput } from "@/validators/product-option.
 import type { UpdateProductOptionValueInput } from "@/validators/product-option.validator";
 
 // ── Internal helpers ───────────────────────────────────────────────────────
+
+/**
+ * Detect a Postgres unique-constraint violation (SQLSTATE 23505), regardless
+ * of whether the driver surfaces the code on the error itself or a `cause`.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const code = (err as { code?: unknown }).code;
+  if (code === "23505") return true;
+  const cause = (err as { cause?: unknown }).cause;
+  if (typeof cause === "object" && cause !== null) {
+    return (cause as { code?: unknown }).code === "23505";
+  }
+  return false;
+}
 
 /**
  * Verify that the product exists and belongs to the given company.
@@ -222,16 +237,21 @@ export async function createProductOptionValue(
   await verifyProductOwnership(companyId, productId);
   await verifyOptionOwnership(productId, optionId);
 
-  // Look for any existing value with this name (active OR soft-deleted). The
-  // (optionId, value) pair is UNIQUE at the DB level, so a soft-deleted row
-  // still occupies the name and must be handled explicitly.
+  // Normalize the incoming value so comparison is case- and whitespace-
+  // insensitive. This prevents near-duplicate values ("Red" vs "red" vs
+  // " Red ") and ensures a soft-deleted row is reactivated even when the
+  // user re-enters the value with different casing.
+  const normalizedValue = data.value.trim();
+
+  // Look for any existing value with this name (active OR soft-deleted),
+  // comparing case-insensitively against the trimmed stored value.
   const [existing] = await db
     .select({ id: productOptionValues.id, isActive: productOptionValues.isActive })
     .from(productOptionValues)
     .where(
       and(
         eq(productOptionValues.optionId, optionId),
-        eq(productOptionValues.value, data.value)
+        sql`lower(trim(${productOptionValues.value})) = ${normalizedValue.toLowerCase()}`
       )
     )
     .limit(1);
@@ -251,6 +271,7 @@ export async function createProductOptionValue(
       .update(productOptionValues)
       .set({
         isActive: true,
+        value: normalizedValue,
         code: data.code ?? null,
         colorCode: data.colorCode ?? null,
         displayOrder: data.displayOrder,
@@ -262,18 +283,30 @@ export async function createProductOptionValue(
     return reactivated;
   }
 
-  const [created] = await db
-    .insert(productOptionValues)
-    .values({
-      optionId,
-      value: data.value,
-      code: data.code ?? null,
-      colorCode: data.colorCode ?? null,
-      displayOrder: data.displayOrder,
-    })
-    .returning();
+  try {
+    const [created] = await db
+      .insert(productOptionValues)
+      .values({
+        optionId,
+        value: normalizedValue,
+        code: data.code ?? null,
+        colorCode: data.colorCode ?? null,
+        displayOrder: data.displayOrder,
+      })
+      .returning();
 
-  return created;
+    return created;
+  } catch (err: unknown) {
+    // Fall back to a clean 409 if a concurrent insert / exact-case row raced
+    // past the pre-check and hit the (optionId, value) unique constraint.
+    if (isUniqueViolation(err)) {
+      throw new ServiceError(
+        "A value with this name already exists for the option",
+        409
+      );
+    }
+    throw err;
+  }
 }
 
 /**
