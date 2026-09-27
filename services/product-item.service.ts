@@ -737,14 +737,20 @@ export async function deleteProductItem(companyId: string, itemId: string) {
       .where(eq(productItems.id, itemId))
       .returning();
 
-    return deleted;
+    return { item: deleted, softDeleted: false as const };
   } catch (err: unknown) {
-    // Foreign-key restrict violation → the SKU has purchase/sale history.
+    // Foreign-key restrict violation → the SKU has purchase/sale history and
+    // cannot be physically removed (those records must be preserved). Fall
+    // back to a soft delete so the action still succeeds and the SKU leaves
+    // the active list.
     if (isForeignKeyViolation(err)) {
-      throw new ProductItemServiceError(
-        "This size has purchase or sale history and can't be deleted. Discontinue it instead.",
-        409
-      );
+      const [updated] = await db
+        .update(productItems)
+        .set({ status: "DISCONTINUED", updatedAt: new Date() })
+        .where(eq(productItems.id, itemId))
+        .returning();
+
+      return { item: updated, softDeleted: true as const };
     }
     throw err;
   }
@@ -752,12 +758,28 @@ export async function deleteProductItem(companyId: string, itemId: string) {
 
 /** Detect a Postgres foreign-key violation (SQLSTATE 23503). */
 function isForeignKeyViolation(err: unknown): boolean {
-  if (typeof err !== "object" || err === null) return false;
-  const code = (err as { code?: unknown }).code;
-  if (code === "23503") return true;
-  const cause = (err as { cause?: unknown }).cause;
-  if (typeof cause === "object" && cause !== null) {
-    return (cause as { code?: unknown }).code === "23503";
+  // Walk the error → cause chain (drizzle wraps the underlying pg error) and
+  // check both the SQLSTATE code (23503) and the message text, since the code
+  // is sometimes not surfaced on the outer error in production builds.
+  let current: unknown = err;
+  for (let depth = 0; depth < 5 && current; depth++) {
+    if (typeof current === "object" && current !== null) {
+      const code = (current as { code?: unknown }).code;
+      if (code === "23503") return true;
+
+      const message = (current as { message?: unknown }).message;
+      if (
+        typeof message === "string" &&
+        (message.includes("23503") ||
+          message.toLowerCase().includes("foreign key constraint"))
+      ) {
+        return true;
+      }
+
+      current = (current as { cause?: unknown }).cause;
+    } else {
+      break;
+    }
   }
   return false;
 }

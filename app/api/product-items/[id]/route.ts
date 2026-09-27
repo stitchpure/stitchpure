@@ -62,11 +62,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const user = authMiddleware(request);
     requireRole(user, Roles.OWNER, Roles.MANAGER);
     const { id } = await context.params;
-    const deleted = await deleteProductItem(user.companyId, id);
+    const { item, softDeleted } = await deleteProductItem(user.companyId, id);
     return NextResponse.json({
       success: true,
-      message: "Product item deleted successfully",
-      data: deleted,
+      message: softDeleted
+        ? "This size has purchase or sale history, so it was discontinued instead of deleted."
+        : "Product item deleted successfully",
+      data: item,
     });
   } catch (error) {
     return handleApiError(error, "Unable to delete product item");
