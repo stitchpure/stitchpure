@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/ToastContext';
 import ImageUpload from '@/components/ui/ImageUpload';
 import StatusBadge from '@/components/ui/StatusBadge';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Category {
   id: string;
@@ -28,6 +29,12 @@ interface ProductOption {
   id: string;
   name: string;
   type: 'TEXT' | 'COLOR' | 'NUMBER';
+  /**
+   * False when the option was reconstructed from SKUs because the active
+   * options endpoint didn't return it (i.e. it was soft-deleted). Such an
+   * option must be reactivated before new SKUs can be attached to it.
+   */
+  isActive?: boolean;
 }
 
 interface Sku {
@@ -38,7 +45,12 @@ interface Sku {
   weight: string | null;
   status: 'ACTIVE' | 'INACTIVE' | 'DISCONTINUED';
   stockLevel: number;
-  optionValues: Array<{ optionId: string; optionValueId: string; value: string }>;
+  optionValues: Array<{
+    optionId: string;
+    optionValueId: string;
+    value: string;
+    optionName?: string;
+  }>;
   // local editable copies
   _price: string;
   _mrp: string;
@@ -89,21 +101,89 @@ export default function ProductDetailPage({
   const [newQty, setNewQty] = useState('0');
   const [addingSize, setAddingSize] = useState(false);
 
-  const loadSkus = useCallback(async () => {
+  // Create-Size-option (recovery when the Size option was deleted)
+  const [creatingSizeOption, setCreatingSizeOption] = useState(false);
+
+  // Delete-size confirmation
+  const [skuToDelete, setSkuToDelete] = useState<Sku | null>(null);
+  const [deletingSku, setDeletingSku] = useState(false);
+
+  const loadSkus = useCallback(async (): Promise<Sku[]> => {
     const res = await apiClient.get<Sku[]>(
       `/api/product-items?productId=${productId}&limit=200`
     );
-    if (res.success) {
-      setSkus(
-        res.data.map((s) => ({
-          ...s,
-          _price: s.sellingPrice,
-          _mrp: s.mrp ?? '',
-          _qty: String(s.stockLevel),
-        }))
-      );
-    }
+    if (!res.success) return [];
+    const loaded = res.data.map((s) => ({
+      ...s,
+      _price: s.sellingPrice,
+      _mrp: s.mrp ?? '',
+      _qty: String(s.stockLevel),
+    }));
+    setSkus(loaded);
+    return loaded;
   }, [productId]);
+
+  /**
+   * Derive the effective "Size" option a SKU is grouped under. The active
+   * options endpoint hides soft-deleted options, so if the Size option was
+   * deleted while SKUs still reference it, fall back to the optionId carried
+   * on the existing SKUs. This keeps "Add size" working against the real
+   * option instead of showing a misleading "no Size option" message.
+   */
+  function deriveSizeOption(
+    activeOptions: ProductOption[],
+    loadedSkus: Sku[]
+  ): ProductOption | null {
+    const fromActive =
+      activeOptions.find((o) => o.name.toLowerCase() === 'size') ??
+      activeOptions[0] ??
+      null;
+    if (fromActive) return { ...fromActive, isActive: true };
+
+    // No active option — reconstruct from the SKUs' referenced option, using
+    // the real option name (returned by the API) so reactivation targets the
+    // same option the SKUs are already linked to.
+    for (const sku of loadedSkus) {
+      const ov = sku.optionValues[0];
+      if (ov?.optionId) {
+        return {
+          id: ov.optionId,
+          name: ov.optionName ?? 'Size',
+          type: 'TEXT',
+          isActive: false,
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Ensure the effective Size option is active before attaching a new SKU.
+   * If it was reconstructed from soft-deleted data (isActive === false),
+   * reactivate it via the create endpoint (which the service maps to a
+   * reactivation). Returns the active option, or null on failure.
+   */
+  async function ensureActiveSizeOption(): Promise<ProductOption | null> {
+    if (sizeOption?.isActive) return sizeOption;
+
+    const res = await apiClient.post<ProductOption>(
+      `/api/products/${productId}/options`,
+      {
+        name: sizeOption?.name ?? 'Size',
+        type: 'TEXT',
+        isRequired: true,
+        isVariant: true,
+        displayOrder: 0,
+      }
+    );
+    if (res.success && 'data' in res) {
+      const active = { ...res.data, isActive: true };
+      setSizeOption(active);
+      return active;
+    }
+    showToast(res.message || 'Failed to activate Size option', 'error');
+    return null;
+  }
 
   useEffect(() => {
     async function init() {
@@ -129,16 +209,11 @@ export default function ProductDetailPage({
 
       if (catsRes.success) setCategories(catsRes.data);
 
-      if (optionsRes.success) {
-        // Use the first variant option (typically "Size").
-        const size =
-          optionsRes.data.find((o) => o.name.toLowerCase() === 'size') ??
-          optionsRes.data[0] ??
-          null;
-        setSizeOption(size);
-      }
+      const loadedSkus = await loadSkus();
 
-      await loadSkus();
+      const activeOptions = optionsRes.success ? optionsRes.data : [];
+      setSizeOption(deriveSizeOption(activeOptions, loadedSkus));
+
       setLoading(false);
     }
     init();
@@ -210,6 +285,40 @@ export default function ProductDetailPage({
     }
   }
 
+  async function deleteSku() {
+    if (!skuToDelete) return;
+    setDeletingSku(true);
+    const res = await apiClient.delete(`/api/product-items/${skuToDelete.id}`);
+    setDeletingSku(false);
+    if (res.success) {
+      showToast(`${skuToDelete.sku} deleted`, 'success');
+      setSkuToDelete(null);
+      await loadSkus();
+    } else {
+      // e.g. the SKU has purchase/sale history and can't be hard-deleted.
+      showToast(res.message || 'Failed to delete size', 'error');
+      setSkuToDelete(null);
+    }
+  }
+
+  async function createSizeOption() {
+    setCreatingSizeOption(true);
+    // Creating an option named "Size" reactivates a soft-deleted one if it was
+    // previously removed, restoring any values that were attached to it.
+    const res = await apiClient.post<ProductOption>(
+      `/api/products/${productId}/options`,
+      { name: 'Size', type: 'TEXT', isRequired: true, isVariant: true, displayOrder: 0 }
+    );
+    setCreatingSizeOption(false);
+    if (res.success && 'data' in res) {
+      setSizeOption({ ...res.data, isActive: true });
+      showToast('Size option added', 'success');
+      await loadSkus();
+    } else {
+      showToast(res.message || 'Failed to add Size option', 'error');
+    }
+  }
+
   async function addSize(e: FormEvent) {
     e.preventDefault();
     if (!sizeOption) {
@@ -218,9 +327,18 @@ export default function ProductDetailPage({
     }
     setAddingSize(true);
 
+    // 0. The Size option may have been soft-deleted (reconstructed from the
+    //    existing SKUs). New SKUs can only attach to an ACTIVE option, so
+    //    reactivate it first.
+    const option = await ensureActiveSizeOption();
+    if (!option) {
+      setAddingSize(false);
+      return;
+    }
+
     // 1. Create the option value (size label). Reactivates if soft-deleted.
     const valueRes = await apiClient.post<{ id: string }>(
-      `/api/products/${productId}/options/${sizeOption.id}/values`,
+      `/api/products/${productId}/options/${option.id}/values`,
       { value: newSize.trim(), displayOrder: skus.length }
     );
 
@@ -237,7 +355,7 @@ export default function ProductDetailPage({
       sellingPrice: Number(newPrice || 0),
       purchasePrice: 0,
       optionValues: [
-        { optionId: sizeOption.id, optionValueId: valueRes.data.id },
+        { optionId: option.id, optionValueId: valueRes.data.id },
       ],
     });
 
@@ -495,6 +613,13 @@ export default function ProductDetailPage({
                                 Discontinue
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => setSkuToDelete(s)}
+                              className="rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       )}
@@ -503,6 +628,24 @@ export default function ProductDetailPage({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* No Size option — offer to (re)create it. This recovers the page
+            when the Size option was accidentally deleted. */}
+        {canManage && !sizeOption && (
+          <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-5">
+            <p className="text-sm text-gray-500">
+              This product has no Size option, so sizes can&apos;t be added.
+            </p>
+            <button
+              type="button"
+              disabled={creatingSizeOption}
+              onClick={createSizeOption}
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              {creatingSizeOption ? 'Adding…' : '+ Add Size option'}
+            </button>
           </div>
         )}
 
@@ -566,6 +709,20 @@ export default function ProductDetailPage({
           </form>
         )}
       </section>
+
+      <ConfirmDialog
+        isOpen={skuToDelete !== null}
+        title="Delete size?"
+        description={
+          skuToDelete
+            ? `Permanently delete "${skuToDelete.sku}"? This can't be undone. Sizes with purchase or sale history can't be deleted — discontinue them instead.`
+            : ''
+        }
+        onConfirm={deleteSku}
+        onCancel={() => {
+          if (!deletingSku) setSkuToDelete(null);
+        }}
+      />
     </div>
   );
 }

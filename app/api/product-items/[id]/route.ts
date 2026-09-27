@@ -65,7 +65,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const deleted = await deleteProductItem(user.companyId, id);
     return NextResponse.json({
       success: true,
-      message: "Product item discontinued successfully",
+      message: "Product item deleted successfully",
       data: deleted,
     });
   } catch (error) {

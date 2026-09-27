@@ -706,7 +706,13 @@ export async function updateProductItem(
 }
 
 /**
- * Soft-delete a product item by setting its status to DISCONTINUED.
+ * Permanently delete a product item (SKU).
+ *
+ * Cascading references (stock ledger, item option values, storefront listing)
+ * are removed automatically by the database. Purchase and sale references use
+ * ON DELETE RESTRICT, so an item with any purchase/sale history cannot be
+ * hard-deleted — in that case we surface a clear message asking the caller to
+ * discontinue it instead.
  *
  * Requirements: 3.4–3.6
  */
@@ -725,11 +731,33 @@ export async function deleteProductItem(companyId: string, itemId: string) {
     throw new ProductItemServiceError("Product item not found", 404);
   }
 
-  const [updated] = await db
-    .update(productItems)
-    .set({ status: "DISCONTINUED", updatedAt: new Date() })
-    .where(eq(productItems.id, itemId))
-    .returning();
+  try {
+    const [deleted] = await db
+      .delete(productItems)
+      .where(eq(productItems.id, itemId))
+      .returning();
 
-  return updated;
+    return deleted;
+  } catch (err: unknown) {
+    // Foreign-key restrict violation → the SKU has purchase/sale history.
+    if (isForeignKeyViolation(err)) {
+      throw new ProductItemServiceError(
+        "This size has purchase or sale history and can't be deleted. Discontinue it instead.",
+        409
+      );
+    }
+    throw err;
+  }
+}
+
+/** Detect a Postgres foreign-key violation (SQLSTATE 23503). */
+function isForeignKeyViolation(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const code = (err as { code?: unknown }).code;
+  if (code === "23503") return true;
+  const cause = (err as { cause?: unknown }).cause;
+  if (typeof cause === "object" && cause !== null) {
+    return (cause as { code?: unknown }).code === "23503";
+  }
+  return false;
 }
