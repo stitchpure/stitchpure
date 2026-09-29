@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 
 export interface HeroSlide {
   /** Background image URL. Falls back to the gradient hero if omitted. */
@@ -143,7 +144,16 @@ export default function HeroCarousel({
                 </p>
               ) : null}
               <div className="mt-7 sm:mt-8">
-                <Link href={slide.ctaHref} className="sp-btn sp-btn--lime">
+                <Link
+                  href={slide.ctaHref}
+                  onClick={() =>
+                    trackEvent("click_shop_now", {
+                      banner_title: `${slide.titleTop} ${slide.titleAccent}`,
+                      cta_label: slide.ctaLabel,
+                    })
+                  }
+                  className="sp-btn sp-btn--lime"
+                >
                   {slide.ctaLabel}
                 </Link>
               </div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { StorefrontProduct } from "@/types/storefront";
+import { trackEvent } from "@/lib/analytics";
 
 const PLACEHOLDER = "/placeholder-product.svg";
 const MIN_LEN = 2;
@@ -134,6 +135,15 @@ export default function HeaderSearch() {
     [query, results]
   );
 
+  // Track searches that return nothing — reveals demand for products you don't
+  // stock yet. Fires once per settled query with no matches.
+  useEffect(() => {
+    const q = query.trim();
+    if (touched && !loading && q.length >= MIN_LEN && results.length === 0) {
+      trackEvent("search_no_results", { search_term: q });
+    }
+  }, [touched, loading, query, results.length]);
+
   function close() {
     setOpen(false);
     setQuery("");
@@ -144,6 +154,12 @@ export default function HeaderSearch() {
   function submitSearch(term: string) {
     const q = term.trim();
     if (q.length < MIN_LEN) return;
+    // GA4's standard search event — shows up under Reports → Engagement with
+    // the exact terms visitors are looking for.
+    trackEvent("search", {
+      search_term: q,
+      results_count: results.length,
+    });
     close();
     router.push(`/?search=${encodeURIComponent(q)}`);
   }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { StorefrontProduct } from "@/types/storefront";
+import { trackEvent } from "@/lib/analytics";
 
 const PLACEHOLDER = "/placeholder-product.svg";
 
@@ -32,10 +33,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const price = Number(product.wholesalePrice);
   const detailHref = productDetailHref(product);
 
+  function handleSelect() {
+    trackEvent("select_product", {
+      product_id: product.productId,
+      product_name: product.name,
+      price: Number.isFinite(price) ? price : 0,
+    });
+  }
+
   return (
     <article className="group flex h-full flex-col">
       <Link
         href={detailHref}
+        onClick={handleSelect}
         className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#eceae6]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -74,7 +84,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="flex items-start justify-between gap-3 pt-2.5">
         <div className="min-w-0">
           <h2 className="truncate text-[0.8rem] font-semibold text-[var(--sp-ink)]">
-            <Link href={detailHref} className="hover:text-[var(--sf-accent)]">
+            <Link href={detailHref} onClick={handleSelect} className="hover:text-[var(--sf-accent)]">
               {product.name}
             </Link>
           </h2>
@@ -85,6 +95,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
         <Link
           href={detailHref}
+          onClick={handleSelect}
           aria-label={`View ${product.name}`}
           className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--sp-ink)] text-[var(--sp-ink)] transition-colors hover:bg-[var(--sp-ink)] hover:text-white"
         >
