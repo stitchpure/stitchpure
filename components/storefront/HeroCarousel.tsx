@@ -129,7 +129,7 @@ export default function HeroCarousel({
                   className="absolute inset-0 h-full w-full object-cover sm:hidden"
                   loading={i === 0 ? "eager" : "lazy"}
                 />
-                {/* Desktop/tablet image — shown from `sm` and up */}
+                {/* Desktop/tablet  image — shown from `sm` and up */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={slide.image}
