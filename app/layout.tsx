@@ -53,6 +53,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    // Google Search Console ownership verification. Next.js renders this as
+    // <meta name="google-site-verification" ...> inside <head>.
+    google: "M_JWTDBrS_6gGYN0ix8kPeAeCpNoSHIPplitv1f35MA",
+  },
 };
 
 export default function RootLayout({

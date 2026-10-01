@@ -6,7 +6,7 @@
  * the default production domain. No trailing slash.
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://stitchpure.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.stitchpure.com"
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "StitchPure";
