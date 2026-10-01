@@ -5,8 +5,13 @@ import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
 
 export interface HeroSlide {
-  /** Background image URL. Falls back to the gradient hero if omitted. */
+  /** Background image URL (used on tablet/desktop). Falls back to the
+   *  gradient hero if omitted. */
   image?: string;
+  /** Optional portrait/mobile-optimized image. Shown on small screens so a
+   *  wide desktop banner isn't awkwardly cropped on phones. Falls back to
+   *  `image` when omitted. */
+  imageMobile?: string;
   chip?: string;
   /** Title lines. The last line is rendered as an outlined accent. */
   titleTop: string;
@@ -110,18 +115,32 @@ export default function HeroCarousel({
                 : "pointer-events-none opacity-0"
             }`}
           >
-            {/* Background: image + dark overlay, or the default gradient */}
+            {/* Background: image + dark overlay, or the default gradient.
+                A separate mobile image (when provided) avoids cropping a wide
+                desktop banner badly on phones. */}
             {slide.image ? (
               <>
+                {/* Mobile image — shown below the `sm` breakpoint */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={slide.imageMobile ?? slide.image}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full object-cover sm:hidden"
+                  loading={i === 0 ? "eager" : "lazy"}
+                />
+                {/* Desktop/tablet image — shown from `sm` and up */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={slide.image}
                   alt=""
                   aria-hidden="true"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 hidden h-full w-full object-cover sm:block"
                   loading={i === 0 ? "eager" : "lazy"}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+                {/* Overlay: stronger at the bottom on mobile (text sits lower),
+                    stronger on the left on desktop. */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 sm:bg-gradient-to-r sm:from-black/75 sm:via-black/45 sm:to-black/10" />
               </>
             ) : (
               <>

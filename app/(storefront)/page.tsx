@@ -27,7 +27,10 @@ export const metadata: Metadata = {
 // the branded gradient background.
 const heroSlides: HeroSlide[] = [
   {
-    image: "/hero-placeholder.svg",
+    image: "/banners/hero-1.png",
+    // To use a phone-optimized banner, add a portrait image at
+    // /public/banners/hero-1-mobile.png and set `imageMobile` below:
+    //   imageMobile: "/banners/hero-1-mobile.png",
     chip: "New season · Live now",
     titleTop: "Wear it",
     titleAccent: "loud.",
@@ -36,6 +39,7 @@ const heroSlides: HeroSlide[] = [
     ctaHref: "#catalog",
   },
   {
+    image: "/banners/hero-2.png",
     chip: "Fresh drop",
     titleTop: "New arrivals",
     titleAccent: "in.",
