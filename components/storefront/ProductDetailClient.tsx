@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import ProductGallery from "./ProductGallery";
 import type { StorefrontOption } from "@/services/storefront.service";
+import { addToCart } from "@/lib/use-cart";
+import { trackEvent } from "@/lib/analytics";
 
 interface ProductDetailClientProps {
+  productId: string;
   productName: string;
   categoryName: string | null;
   description: string | null;
@@ -91,6 +94,7 @@ function FeatureStrip() {
 }
 
 export default function ProductDetailClient({
+  productId,
   productName,
   categoryName,
   description,
@@ -103,8 +107,12 @@ export default function ProductDetailClient({
 }: ProductDetailClientProps) {
   // Track selected value per option id
   const [selected, setSelected] = useState<Record<string, string>>({});
+  // Brief "Added!" confirmation after adding to cart.
+  const [justAdded, setJustAdded] = useState(false);
 
   const requiredMissing = options.filter((o) => !selected[o.id]);
+  const outOfStock = availableQuantity <= 0;
+  const canAddToCart = !outOfStock && requiredMissing.length === 0;
 
   // Build a human-readable summary of the selection for the inquiry message
   const selectionSummary = useMemo(() => {
@@ -118,6 +126,27 @@ export default function ProductDetailClient({
       .filter(Boolean);
     return parts.join(", ");
   }, [options, selected]);
+
+  function handleAddToCart() {
+    if (!canAddToCart) return;
+    addToCart({
+      productId,
+      name: productName,
+      price,
+      image: images?.[0] ?? null,
+      variant: selectionSummary,
+      companyPhone,
+      companyName,
+    });
+    trackEvent("add_to_cart", {
+      product_id: productId,
+      product_name: productName,
+      variant: selectionSummary,
+      price,
+    });
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 1800);
+  }
 
   const whatsappHref = useMemo(() => {
     if (!companyPhone) return null;
@@ -263,58 +292,58 @@ export default function ProductDetailClient({
           </div>
         ))}
 
-        {/* Primary CTA — WhatsApp enquiry (carries selected variant) */}
+        {/* Primary CTA — Add to cart (ordering is the main action) */}
         <div className="space-y-2.5 pt-1">
-          {whatsappHref ? (
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sp-btn sp-btn--dark w-full justify-center !py-4 text-sm uppercase tracking-widest"
-            >
-              Enquire on WhatsApp
-            </a>
-          ) : (
-            <a
-              href="#inquiry"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToInquiry();
-              }}
-              className="sp-btn sp-btn--dark w-full justify-center !py-4 text-sm uppercase tracking-widest"
-            >
-              Send an enquiry
-            </a>
-          )}
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!canAddToCart}
+            title={
+              outOfStock
+                ? "Out of stock"
+                : requiredMissing.length > 0
+                  ? `Select ${requiredMissing.map((o) => o.name.toLowerCase()).join(" & ")} first`
+                  : "Add to cart"
+            }
+            className={`sp-btn w-full justify-center !py-4 text-sm uppercase tracking-widest ${
+              canAddToCart ? "sp-btn--dark" : "cursor-not-allowed !bg-[#f3f2ee] !text-[var(--sf-soft)]"
+            }`}
+          >
+            {outOfStock ? "Out of stock" : justAdded ? "Added to cart \u2713" : "Add to cart"}
+          </button>
 
           {options.length > 0 && requiredMissing.length > 0 ? (
             <p className="text-center text-xs text-[var(--sf-soft)]">
-              Tip: pick your {requiredMissing.map((o) => o.name.toLowerCase()).join(" & ")} so we can help faster.
+              Tip: pick your {requiredMissing.map((o) => o.name.toLowerCase()).join(" & ")} to add to cart.
             </p>
           ) : null}
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              aria-label="Add to cart (coming soon)"
-              className="relative inline-flex flex-1 cursor-not-allowed items-center justify-center rounded-xl border border-[var(--sf-line)] bg-[#f3f2ee] px-4 py-3 text-sm font-semibold text-[var(--sf-soft)]"
-            >
-              Add to cart
-              <span className="absolute -right-2 -top-2 rounded-full bg-[var(--sp-lime)] px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-[var(--sp-ink)] shadow-sm">
-                Coming soon
+          {/* Secondary — small enquiry links for buyers who want to ask first */}
+          <div className="flex items-center justify-center gap-4 pt-0.5 text-xs">
+            {whatsappHref ? (
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[var(--sf-muted)] underline-offset-2 hover:text-[var(--sp-ink)] hover:underline"
+              >
+                Enquire on WhatsApp
+              </a>
+            ) : null}
+            {whatsappHref ? (
+              <span aria-hidden="true" className="text-[var(--sf-line)]">
+                |
               </span>
-            </button>
+            ) : null}
             <a
               href="#inquiry"
               onClick={(e) => {
                 e.preventDefault();
                 scrollToInquiry();
               }}
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-[var(--sf-line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--sp-ink)] transition-colors hover:border-[var(--sp-ink)]"
+              className="font-semibold text-[var(--sf-muted)] underline-offset-2 hover:text-[var(--sp-ink)] hover:underline"
             >
-              Enquiry form
+              Send an enquiry
             </a>
           </div>
         </div>

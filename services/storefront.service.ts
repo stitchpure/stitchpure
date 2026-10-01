@@ -14,6 +14,7 @@ import {
 import {
   eq,
   and,
+  not,
   count,
   ilike,
   sql,
@@ -131,6 +132,7 @@ export async function getStorefrontProductById(productId: string) {
       slug: products.slug,
       description: products.description,
       images: products.images,
+      categoryId: products.categoryId,
       categoryName: categories.name,
       wholesalePrice: storefrontListings.wholesalePrice,
       companyId: companies.id,
@@ -168,6 +170,79 @@ export async function getStorefrontProductById(productId: string) {
   const availableQuantity = Math.max(0, Number(stockRow?.available ?? 0));
 
   return { ...row, availableQuantity };
+}
+
+/**
+ * Get related products to show under a product detail page.
+ *
+ * Strategy: prefer visible products in the same category (excluding the
+ * current one); if there aren't enough, top up with the newest visible
+ * products. Returns the same shape as the catalog so it can feed ProductGrid.
+ */
+export async function getRelatedStorefrontProducts(
+  productId: string,
+  categoryId: string | null,
+  limit = 4
+) {
+  const baseSelect = {
+    id: storefrontListings.id,
+    productId: products.id,
+    name: products.name,
+    slug: products.slug,
+    description: products.description,
+    images: products.images,
+    categoryName: categories.name,
+    wholesalePrice: storefrontListings.wholesalePrice,
+    companyId: companies.id,
+    companyName: companies.name,
+    companySlug: companies.slug,
+    companyPhone: companies.phone,
+    companyEmail: companies.email,
+  };
+
+  // 1. Same-category products (excluding the current product).
+  const sameCategory = categoryId
+    ? await db
+        .select(baseSelect)
+        .from(storefrontListings)
+        .innerJoin(products, eq(storefrontListings.productId, products.id))
+        .innerJoin(companies, eq(products.companyId, companies.id))
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .where(
+          and(
+            ...visibleStorefrontConditions,
+            eq(products.categoryId, categoryId),
+            not(eq(products.id, productId))
+          )
+        )
+        .orderBy(desc(storefrontListings.createdAt))
+        .limit(limit)
+    : [];
+
+  if (sameCategory.length >= limit) {
+    return sameCategory.slice(0, limit);
+  }
+
+  // 2. Top up with the newest visible products, skipping the current product
+  //    and anything already picked.
+  const excludeIds = [productId, ...sameCategory.map((p) => p.productId)];
+
+  const fillers = await db
+    .select(baseSelect)
+    .from(storefrontListings)
+    .innerJoin(products, eq(storefrontListings.productId, products.id))
+    .innerJoin(companies, eq(products.companyId, companies.id))
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .where(
+      and(
+        ...visibleStorefrontConditions,
+        not(inArray(products.id, excludeIds))
+      )
+    )
+    .orderBy(desc(storefrontListings.createdAt))
+    .limit(limit - sameCategory.length);
+
+  return [...sameCategory, ...fillers];
 }
 
 export interface StorefrontOptionValue {

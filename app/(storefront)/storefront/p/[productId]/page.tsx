@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 
 import InquiryForm from "@/components/storefront/InquiryForm";
 import ProductDetailClient from "@/components/storefront/ProductDetailClient";
+import ProductGrid from "@/components/storefront/ProductGrid";
 import JsonLd from "@/components/seo/JsonLd";
 import {
   getStorefrontProductById,
   getStorefrontProductOptions,
+  getRelatedStorefrontProducts,
 } from "@/services/storefront.service";
 import { ServiceError } from "@/lib/service-error";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
@@ -78,6 +80,12 @@ export default async function StorefrontProductPage({
 
   const options = await getStorefrontProductOptions(product.productId);
 
+  const related = await getRelatedStorefrontProducts(
+    product.productId,
+    product.categoryId,
+    4
+  );
+
   const price = Number(product.wholesalePrice);
 
   const productJsonLd = {
@@ -120,6 +128,7 @@ export default async function StorefrontProductPage({
       </nav>
 
       <ProductDetailClient
+        productId={product.productId}
         productName={product.name}
         categoryName={product.categoryName}
         description={product.description}
@@ -131,7 +140,16 @@ export default async function StorefrontProductPage({
         availableQuantity={product.availableQuantity}
       />
 
-      <div id="inquiry" className="scroll-mt-24">
+      {related.length > 0 ? (
+        <section className="space-y-6 border-t border-[var(--sf-line)] pt-10">
+          <h2 className="sf-display text-2xl font-extrabold uppercase tracking-[-0.02em] text-[var(--sp-ink)]">
+            You might also like
+          </h2>
+          <ProductGrid products={related} />
+        </section>
+      ) : null}
+
+      <div id="inquiry" className="scroll-mt-24 border-t border-[var(--sf-line)] pt-10">
         <InquiryForm
           companyId={product.companyId}
           productId={product.productId}

@@ -3,6 +3,7 @@ import { Outfit, Source_Sans_3 } from "next/font/google";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import HeaderSearch from "@/components/storefront/HeaderSearch";
+import CartButton from "@/components/storefront/CartButton";
 import "./storefront.css";
 
 const outfit = Outfit({
@@ -23,14 +24,6 @@ const MARQUEE_ITEMS = [
   "Made to stand out",
   "Easy 7-day returns",
 ];
-
-function IconBag() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m-3 0h13.5l-.75 9a1.5 1.5 0 0 1-1.5 1.35H7.5A1.5 1.5 0 0 1 6 19.5l-.75-9Z" />
-    </svg>
-  );
-}
 
 export default async function StorefrontLayout({
   children,
@@ -103,13 +96,7 @@ export default async function StorefrontLayout({
               Shop
             </Link>
             <HeaderSearch />
-            <Link
-              href="/#catalog"
-              aria-label="Shop"
-              className="rounded-full p-2.5 text-[var(--sp-ink)] transition-colors hover:bg-[var(--sf-accent-soft)] hover:text-[var(--sf-accent)]"
-            >
-              <IconBag />
-            </Link>
+            <CartButton />
           </div>
         </div>
       </header>
