@@ -165,10 +165,18 @@ export default function Sidebar({ role, companyName, mobileOpen = false, onMobil
                 </span>
               ) : null}
 
-              {/* Collapsible content with animation */}
+              {/* Collapsible content with animation. The max-height clamp +
+                  overflow-hidden is ONLY for collapsible sections (so the
+                  expand/collapse animates). Non-collapsible sections must not
+                  be clamped, otherwise long lists get clipped and lower items
+                  (e.g. Inquiries) disappear. */}
               <div
-                className={`overflow-hidden transition-all duration-200 ${
-                  isCollapsible && !isExpanded ? 'max-h-0 opacity-0' : 'max-h-96 opacity-100'
+                className={`transition-all duration-200 ${
+                  isCollapsible
+                    ? isExpanded
+                      ? 'max-h-96 overflow-hidden opacity-100'
+                      : 'max-h-0 overflow-hidden opacity-0'
+                    : 'opacity-100'
                 } ${section.label ? 'mt-1' : ''}`}
               >
                 <div className="space-y-1">
