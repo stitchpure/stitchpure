@@ -70,11 +70,15 @@ export default async function StorefrontLayout({
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
+            aria-label={SITE_NAME}
             className="sf-display flex items-center gap-2 text-lg font-extrabold uppercase tracking-[-0.04em] text-[var(--sp-ink)] sm:text-[1.4rem]"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sp-ink)] text-sm font-extrabold text-[var(--sp-lime)] sm:h-9 sm:w-9">
-              {SITE_NAME.charAt(0)}
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt={SITE_NAME}
+              className="h-9 w-auto sm:h-10"
+            />
             <span>{SITE_NAME}</span>
           </Link>
 
