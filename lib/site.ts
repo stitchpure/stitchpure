@@ -17,7 +17,7 @@ export const SITE_NAME = "StitchPure";
  * so you don't need a code change.
  */
 export const SITE_CONTACT = {
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "hello@stitchpure.com",
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "stitchpureonline@gmail.com",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+91 00000 00000",
   /** WhatsApp number in international format, digits only (for wa.me links). */
   whatsapp: process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "910000000000",
