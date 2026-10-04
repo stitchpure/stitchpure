@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 
 import ProductGrid from "@/components/storefront/ProductGrid";
 import EmptyState from "@/components/storefront/EmptyState";
+import CategoryChips from "@/components/storefront/CategoryChips";
 import HeroCarousel, {
   type HeroSlide,
 } from "@/components/storefront/HeroCarousel";
-import { getStorefrontProducts } from "@/services/storefront.service";
+import {
+  getStorefrontProducts,
+  getStorefrontCategories,
+} from "@/services/storefront.service";
 import { SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -52,7 +56,7 @@ const heroSlides: HeroSlide[] = [
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string | string[] }>;
+  searchParams: Promise<{ search?: string | string[]; category?: string | string[] }>;
 }) {
   const params = await searchParams;
   const rawSearch = Array.isArray(params.search)
@@ -61,20 +65,31 @@ export default async function HomePage({
   const search = (rawSearch ?? "").trim();
   const isSearching = search.length >= 3;
 
+  const rawCategory = Array.isArray(params.category)
+    ? params.category[0]
+    : params.category;
+  const activeCategory = (rawCategory ?? "").trim() || null;
+
   let products: Awaited<ReturnType<typeof getStorefrontProducts>>["data"] = [];
+  let categories: Awaited<ReturnType<typeof getStorefrontCategories>> = [];
   let error: string | null = null;
 
   try {
-    const result = await getStorefrontProducts({
-      page: 1,
-      limit: 50,
-      search: isSearching ? search : undefined,
-      categoryId: undefined,
-      categoryIds: undefined,
-      minPrice: undefined,
-      maxPrice: undefined,
-    });
+    const [result, cats] = await Promise.all([
+      getStorefrontProducts({
+        page: 1,
+        limit: 50,
+        search: isSearching ? search : undefined,
+        // Category filter is ignored while searching, so search spans all.
+        categoryId: isSearching ? undefined : activeCategory ?? undefined,
+        categoryIds: undefined,
+        minPrice: undefined,
+        maxPrice: undefined,
+      }),
+      getStorefrontCategories(),
+    ]);
     products = result.data;
+    categories = cats;
   } catch {
     error = "Failed to load products";
   }
@@ -91,6 +106,8 @@ export default async function HomePage({
                 Results for{" "}
                 <span className="text-[var(--sf-accent)]">“{search}”</span>
               </>
+            ) : activeCategory ? (
+              categories.find((c) => c.id === activeCategory)?.name ?? "Shop all"
             ) : (
               "Shop all"
             )}
@@ -105,6 +122,11 @@ export default async function HomePage({
           ) : null}
         </div>
 
+        {/* Category filter — hidden while searching (search spans all) */}
+        {isSearching ? null : (
+          <CategoryChips categories={categories} activeId={activeCategory} />
+        )}
+
         {error ? (
           <div className="rounded-2xl border border-red-200/80 bg-red-50/80 px-4 py-6 text-center text-sm text-red-700">
             {error}
@@ -114,12 +136,16 @@ export default async function HomePage({
             message={
               isSearching
                 ? `No products found for “${search}”.`
-                : "No products are available yet."
+                : activeCategory
+                  ? "No products in this category yet."
+                  : "No products are available yet."
             }
             hint={
               isSearching
                 ? "Try a different search term or browse all products."
-                : "New drops are on the way — check back soon."
+                : activeCategory
+                  ? "Try another category or view all products."
+                  : "New drops are on the way — check back soon."
             }
           />
         ) : (
