@@ -110,8 +110,8 @@ export default async function StorefrontLayout({
       </main>
 
       <footer className="mt-8 border-t border-[var(--sf-line)] bg-[var(--sp-ink)] text-[var(--sp-paper)]">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-          <div className="sm:col-span-2 lg:col-span-1">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-5 py-10 sm:px-6 sm:py-12 lg:grid-cols-4 lg:px-8">
+          <div className="col-span-2 lg:col-span-1">
             <p className="sf-display text-xl font-extrabold uppercase tracking-tight">
               {SITE_NAME}
             </p>
@@ -134,8 +134,8 @@ export default async function StorefrontLayout({
               Company
             </p>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><Link href="/#catalog" className="hover:text-[var(--sp-lime)]">About</Link></li>
-              <li><Link href="/#catalog" className="hover:text-[var(--sp-lime)]">Contact</Link></li>
+              <li><Link href="/about" className="hover:text-[var(--sp-lime)]">About</Link></li>
+              <li><Link href="/contact" className="hover:text-[var(--sp-lime)]">Contact</Link></li>
             </ul>
           </div>
           <div>
@@ -143,8 +143,10 @@ export default async function StorefrontLayout({
               Help
             </p>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><Link href="/#catalog" className="hover:text-[var(--sp-lime)]">Shipping</Link></li>
-              <li><Link href="/#catalog" className="hover:text-[var(--sp-lime)]">Returns</Link></li>
+              <li><Link href="/shipping" className="hover:text-[var(--sp-lime)]">Shipping</Link></li>
+              <li><Link href="/returns" className="hover:text-[var(--sp-lime)]">Returns</Link></li>
+              <li><Link href="/privacy" className="hover:text-[var(--sp-lime)]">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-[var(--sp-lime)]">Terms</Link></li>
             </ul>
           </div>
         </div>

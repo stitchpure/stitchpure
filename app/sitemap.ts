@@ -21,6 +21,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    // Informational / policy pages — good for SEO and buyer trust.
+    ...["about", "contact", "shipping", "returns", "privacy", "terms"].map(
+      (path) => ({
+        url: `${SITE_URL}/${path}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.5,
+      })
+    ),
   ];
 
   const productEntries: MetadataRoute.Sitemap = [];
